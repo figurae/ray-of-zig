@@ -1,5 +1,3 @@
-const std = @import("std");
-
 // NOTE: can this be made a bit more generic while maintaining runtime usability?
 pub fn i32FromFloat(float: anytype) i32 {
     return @as(i32, @intFromFloat(float));
