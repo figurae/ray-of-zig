@@ -1,21 +1,35 @@
 const std = @import("std");
 const raylib = @import("raylib");
 
+const canvas_width = 320;
+const canvas_height = 180;
+
+const window_width = 1920;
+const window_height = 1080;
+
+const Canvas = struct {
+    width: i32,
+    height: i32,
+    pixels: [canvas_width * canvas_height]raylib.Color,
+};
+
 pub fn main() void {
     raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = true });
-    raylib.InitWindow(1920, 1080, "ray-of-zig");
+
+    raylib.InitWindow(window_width, window_height, "ray-of-zig");
     defer raylib.CloseWindow();
 
     raylib.SetTargetFPS(60);
 
-    const width = 320;
-    const height = 180;
-
     var rand = std.rand.Pcg.init(69);
 
-    var pixels = [_]raylib.Color{undefined} ** (width * height);
+    var canvas = Canvas{
+        .width = canvas_width,
+        .height = canvas_height,
+        .pixels = [_]raylib.Color{raylib.WHITE} ** (canvas_width * canvas_height),
+    };
 
-    for (&pixels) |*pixel| {
+    for (&canvas.pixels) |*pixel| {
         if (rand.random().boolean())
             pixel.* = raylib.PINK
         else
@@ -23,9 +37,9 @@ pub fn main() void {
     }
 
     const image = raylib.Image{
-        .data = &pixels,
-        .width = width,
-        .height = height,
+        .data = &canvas.pixels,
+        .width = canvas.width,
+        .height = canvas.height,
         .format = @intFromEnum(raylib.PixelFormat.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8),
         .mipmaps = 1,
     };
@@ -35,7 +49,8 @@ pub fn main() void {
 
     while (!raylib.WindowShouldClose()) {
         // TODO: don't resize window manually, make ingame buttons, check this only on button press
-        const integer_scale = getIntegerScale(width, height, raylib.GetScreenWidth(), raylib.GetScreenHeight());
+        const integer_scale = getIntegerScale(canvas.width, canvas.height, raylib.GetScreenWidth(), raylib.GetScreenHeight());
+
         raylib.BeginDrawing();
         defer raylib.EndDrawing();
 
