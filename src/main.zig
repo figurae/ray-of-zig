@@ -24,7 +24,7 @@ const Canvas = struct {
             return Error.PixelOutOfBounds;
         }
 
-        const index = @as(usize, @intFromFloat(@as(f32, @floatFromInt(self.width)) * pos.y + pos.x));
+        const index = t.usizeFromFloat(t.f32FromInt(self.width) * pos.y + pos.x);
 
         self.pixels[index] = color;
     }
