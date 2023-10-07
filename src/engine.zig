@@ -41,7 +41,6 @@ pub const engine = struct {
 
     pub fn deinit() void {
         raylib.UnloadTexture(texture);
-        raylib.UnloadImage(image);
         raylib.CloseWindow();
     }
 };
