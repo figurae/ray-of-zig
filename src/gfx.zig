@@ -32,20 +32,25 @@ pub const Canvas = struct {
         to: raylib.Vector2,
         color: raylib.Color,
     ) !void {
+        // std.debug.print(">>> DRAWING LINE!\n", .{});
         const run = to.x - from.x;
         const rise = to.y - from.y;
 
+        // std.debug.print("from = {d}:{d}, to = {d}:{d}\n", .{ from.x, from.y, to.x, to.y });
+
         if (@abs(rise) < @abs(run)) {
+            // std.debug.print("rise < run\n", .{});
             if (from.x > to.x) {
-                try self.drawLineLow(to, from, run, rise, color);
+                try self.drawLineLow(to, from, color);
             } else {
-                try self.drawLineLow(from, to, run, rise, color);
+                try self.drawLineLow(from, to, color);
             }
         } else {
+            // std.debug.print("rise >= run\n", .{});
             if (from.y > to.y) {
-                try self.drawLineHigh(to, from, run, rise, color);
+                try self.drawLineHigh(to, from, color);
             } else {
-                try self.drawLineHigh(from, to, run, rise, color);
+                try self.drawLineHigh(from, to, color);
             }
         }
     }
@@ -71,14 +76,15 @@ pub const Canvas = struct {
         self: *Self,
         from: raylib.Vector2,
         to: raylib.Vector2,
-        run: f32,
-        original_rise: f32,
         color: raylib.Color,
     ) !void {
+        // std.debug.print("drawing low!\n", .{});
         var y_dir: f32 = 1;
-        var rise = original_rise;
+        var run = to.x - from.x;
+        var rise = to.y - from.y;
 
         if (rise < 0) {
+            // std.debug.print("rise < 0\n", .{});
             y_dir = -1;
             rise = -rise;
         }
@@ -89,6 +95,7 @@ pub const Canvas = struct {
         for (t.usizeFromFloat(from.x)..(t.usizeFromFloat(to.x) + 1)) |int_x| {
             const x = t.f32FromInt(int_x);
 
+            // std.debug.print("drawing x = {d}, y = {d}\n", .{ x, y });
             try self.putPixel(.{ .x = x, .y = y }, color);
 
             if (difference > 0) {
@@ -104,14 +111,15 @@ pub const Canvas = struct {
         self: *Self,
         from: raylib.Vector2,
         to: raylib.Vector2,
-        original_run: f32,
-        rise: f32,
         color: raylib.Color,
     ) !void {
+        // std.debug.print("drawing high!\n", .{});
         var x_dir: f32 = 1;
-        var run = original_run;
+        var run = to.x - from.x;
+        var rise = to.y - from.y;
 
         if (run < 0) {
+            // std.debug.print("run < 0\n", .{});
             x_dir = -1;
             run = -run;
         }
@@ -122,6 +130,7 @@ pub const Canvas = struct {
         for (t.usizeFromFloat(from.y)..(t.usizeFromFloat(to.y) + 1)) |int_y| {
             const y = t.f32FromInt(int_y);
 
+            // std.debug.print("drawing x = {d}, y = {d}\n", .{ x, y });
             try self.putPixel(.{ .x = x, .y = y }, color);
 
             if (difference > 0) {

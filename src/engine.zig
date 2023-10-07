@@ -1,9 +1,11 @@
+const std = @import("std");
 const raylib = @import("raylib");
 
 const config = @import("config.zig");
 const gfx = @import("gfx.zig");
 
 const m = @import("utils/math.zig");
+const t = @import("utils/types.zig");
 
 pub const engine = struct {
     var canvas = gfx.Canvas{
@@ -14,8 +16,11 @@ pub const engine = struct {
 
     var image: raylib.Image = undefined;
     var texture: raylib.Texture2D = undefined;
-    var x2: f32 = 139;
-    var y2: f32 = 100;
+    const pos1 = .{ .x = t.f32FromInt(config.canvas_width) / 2 - 1, .y = t.f32FromInt(config.canvas_height) / 2 - 1 };
+    var pos2: raylib.Vector2 = undefined;
+    const angular_speed: f32 = 3;
+    var angle: f32 = 2;
+    const radius: f32 = 50;
 
     pub fn init() void {
         raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
@@ -37,10 +42,17 @@ pub const engine = struct {
 
         canvas.clear(raylib.RAYWHITE);
 
-        y2 += 5.76 * dt;
-        x2 -= 15.44 * dt;
+        angle += angular_speed * dt;
+        pos2 = .{
+            .x = radius * @cos(angle) + pos1.x,
+			// NOTE: this floor shouldn't be necessary here, try modifying putPixel
+            .y = @floor(radius * @sin(angle) + pos1.y),
+        };
 
-        try canvas.drawLine(.{ .x = 30, .y = 60 }, .{ .x = x2, .y = y2 }, raylib.RED);
+        // std.debug.print("pos1: {d}:{d}\n", .{ pos1.x, pos1.y });
+        // std.debug.print("pos2: {d}:{d}\n", .{ pos2.x, pos2.y });
+
+        try canvas.drawLine(pos1, pos2, raylib.RED);
 
         raylib.UpdateTexture(texture, &canvas.pixels);
         raylib.DrawTextureEx(texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
