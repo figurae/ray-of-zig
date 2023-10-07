@@ -14,8 +14,8 @@ pub const engine = struct {
 
     var image: raylib.Image = undefined;
     var texture: raylib.Texture2D = undefined;
-    var x2: f32 = 60;
-    var y2: f32 = 10;
+    var x2: f32 = 139;
+    var y2: f32 = 100;
 
     pub fn init() void {
         raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
@@ -37,10 +37,10 @@ pub const engine = struct {
 
         canvas.clear(raylib.RAYWHITE);
 
-        x2 += 2.52 * dt;
-        y2 += 10.76 * dt;
+        y2 += 5.76 * dt;
+        x2 -= 15.44 * dt;
 
-        try canvas.drawLine(.{ .x = 0, .y = 0 }, .{ .x = x2, .y = y2 }, raylib.RED);
+        try canvas.drawLine(.{ .x = 30, .y = 60 }, .{ .x = x2, .y = y2 }, raylib.RED);
 
         raylib.UpdateTexture(texture, &canvas.pixels);
         raylib.DrawTextureEx(texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
