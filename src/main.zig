@@ -7,13 +7,35 @@ const canvas_height = 180;
 const window_width = 1920;
 const window_height = 1080;
 
+const Error = error{
+    PixelOutOfBounds,
+};
+
 const Canvas = struct {
+    const Self = @This();
+
     width: i32,
     height: i32,
     pixels: [canvas_width * canvas_height]raylib.Color,
+
+    fn putPixel(self: *Self, pos: raylib.Vector2, color: raylib.Color) !void {
+        const index = @as(usize, @intFromFloat(@as(f32, @floatFromInt(self.width)) * pos.y + pos.x));
+
+        if (index > self.pixels.len - 1) {
+            return Error.PixelOutOfBounds;
+        }
+
+        self.pixels[index] = color;
+    }
+
+    fn clearCanvas(self: *Self, color: raylib.Color) void {
+        for (&self.pixels) |*pixel| {
+            pixel.* = color;
+        }
+    }
 };
 
-pub fn main() void {
+pub fn main() !void {
     raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = true });
 
     raylib.InitWindow(window_width, window_height, "ray-of-zig");
@@ -21,20 +43,15 @@ pub fn main() void {
 
     raylib.SetTargetFPS(60);
 
-    var rand = std.rand.Pcg.init(69);
-
     var canvas = Canvas{
         .width = canvas_width,
         .height = canvas_height,
         .pixels = [_]raylib.Color{raylib.WHITE} ** (canvas_width * canvas_height),
     };
 
-    for (&canvas.pixels) |*pixel| {
-        if (rand.random().boolean())
-            pixel.* = raylib.PINK
-        else
-            pixel.* = raylib.RED;
-    }
+    canvas.clearCanvas(raylib.PINK);
+
+    try canvas.putPixel(.{ .x = 319, .y = 179 }, raylib.YELLOW);
 
     const image = raylib.Image{
         .data = &canvas.pixels,
@@ -54,10 +71,9 @@ pub fn main() void {
         raylib.BeginDrawing();
         defer raylib.EndDrawing();
 
-        raylib.ClearBackground(raylib.BLACK);
-        raylib.DrawFPS(10, 10);
-
         raylib.DrawTextureEx(texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
+
+        raylib.DrawFPS(10, 10);
     }
 }
 
