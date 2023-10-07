@@ -1,5 +1,6 @@
 const std = @import("std");
 const raylib = @import("raylib");
+const t = @import("utils/types.zig");
 
 const canvas_width = 320;
 const canvas_height = 180;
@@ -19,11 +20,11 @@ const Canvas = struct {
     pixels: [canvas_width * canvas_height]raylib.Color,
 
     fn putPixel(self: *Self, pos: raylib.Vector2, color: raylib.Color) !void {
-        const index = @as(usize, @intFromFloat(@as(f32, @floatFromInt(self.width)) * pos.y + pos.x));
-
-        if (index > self.pixels.len - 1) {
+        if (t.i32FromFloat(pos.x) > self.width - 1 or t.i32FromFloat(pos.y) > self.height - 1) {
             return Error.PixelOutOfBounds;
         }
+
+        const index = @as(usize, @intFromFloat(@as(f32, @floatFromInt(self.width)) * pos.y + pos.x));
 
         self.pixels[index] = color;
     }
@@ -51,7 +52,7 @@ pub fn main() !void {
 
     canvas.clearCanvas(raylib.PINK);
 
-    try canvas.putPixel(.{ .x = 319, .y = 179 }, raylib.YELLOW);
+    try canvas.putPixel(.{ .x = 120, .y = 120 }, raylib.YELLOW);
 
     const image = raylib.Image{
         .data = &canvas.pixels,
