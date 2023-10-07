@@ -14,6 +14,8 @@ pub const engine = struct {
 
     var image: raylib.Image = undefined;
     var texture: raylib.Texture2D = undefined;
+    var x2: f32 = 60;
+    var y2: f32 = 10;
 
     pub fn init() void {
         raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
@@ -27,13 +29,20 @@ pub const engine = struct {
     }
 
     pub fn update(dt: f32) !void {
-        _ = dt;
         // TODO: don't resize window manually, make ingame buttons, check this only on button press
         const integer_scale = m.getIntegerScale(canvas.width, canvas.height, raylib.GetScreenWidth(), raylib.GetScreenHeight());
 
         raylib.BeginDrawing();
         defer raylib.EndDrawing();
 
+        canvas.clear(raylib.RAYWHITE);
+
+        x2 += 2.52 * dt;
+        y2 += 10.76 * dt;
+
+        try canvas.drawLine(.{ .x = 0, .y = 0 }, .{ .x = x2, .y = y2 }, raylib.RED);
+
+        raylib.UpdateTexture(texture, &canvas.pixels);
         raylib.DrawTextureEx(texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
 
         raylib.DrawFPS(10, 10);
