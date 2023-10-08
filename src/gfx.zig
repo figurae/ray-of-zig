@@ -19,12 +19,15 @@ pub const Canvas = struct {
         const x = t.i32FromFloat(@round(pos.x));
         const y = t.i32FromFloat(@round(pos.y));
 
-        if (x < 0 or y < 0 or x >= self.width or y >= self.height)
-            return GfxError.DrawingOutOfBounds;
+        // if (x < 0 or y < 0 or x >= self.width or y >= self.height)
+        //     return GfxError.DrawingOutOfBounds;
 
-        const index = @as(usize, @intCast(self.width * y + x));
+        // NOTE: remove this bounding later, this isn't putPixel's business
+        const index = @as(usize, @intCast(@abs(self.width * y + x)));
+        const max_index = config.canvas_width * config.canvas_height - 1;
+        const i = if (index > max_index) max_index else index;
 
-        self.pixels[index] = color;
+        self.pixels[i] = color;
     }
 
     // NOTE: this should be moved to another level of abstraction

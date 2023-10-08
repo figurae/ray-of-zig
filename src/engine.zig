@@ -3,6 +3,7 @@ const raylib = @import("raylib");
 
 const config = @import("config.zig");
 const gfx = @import("gfx.zig");
+const fun = @import("fun.zig");
 
 const m = @import("utils/math.zig");
 const t = @import("utils/types.zig");
@@ -14,21 +15,23 @@ pub const engine = struct {
         .pixels = [_]raylib.Color{raylib.RAYWHITE} ** (config.canvas_width * config.canvas_height),
     };
 
+    var random: std.rand.Random = undefined;
     var image: raylib.Image = undefined;
     var texture: raylib.Texture2D = undefined;
-    const pos1 = .{ .x = t.f32FromInt(config.canvas_width) / 2 - 1, .y = t.f32FromInt(config.canvas_height) / 2 - 1 };
-    var pos2: raylib.Vector2 = undefined;
-    const angular_speed: f32 = 3;
-    var angle: f32 = 2;
-    const radius: f32 = 50;
+    var dancing_lines: [100]fun.DancingLine = undefined;
 
     pub fn init() void {
         raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
         raylib.InitWindow(config.window_width, config.window_height, config.window_title);
         raylib.SetTargetFPS(config.target_fps);
 
+        var pcg = std.rand.Pcg.init(@bitCast(std.time.timestamp()));
+        random = pcg.random();
         image = canvas.getImage();
         texture = raylib.LoadTextureFromImage(image);
+        for (&dancing_lines) |*line| {
+            line.* = fun.DancingLine.init(&random, null, null, null, null, null);
+        }
 
         raylib.SetTextureFilter(texture, @intFromEnum(raylib.TextureFilter.TEXTURE_FILTER_POINT));
     }
@@ -42,13 +45,10 @@ pub const engine = struct {
 
         canvas.clear(raylib.RAYWHITE);
 
-        angle += angular_speed * dt;
-        pos2 = .{
-            .x = @round(radius * @cos(angle) + pos1.x),
-            .y = @round(radius * @sin(angle) + pos1.y),
-        };
-
-        try canvas.drawLine(pos1, pos2, raylib.RED);
+        for (&dancing_lines) |*line| {
+            line.update(dt);
+            try canvas.drawLine(line.pos_1, line.pos_2, line.color);
+        }
 
         raylib.UpdateTexture(texture, &canvas.pixels);
         raylib.DrawTextureEx(texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
