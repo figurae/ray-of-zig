@@ -1,5 +1,5 @@
 const raylib = @import("raylib");
-const engine = @import("engine.zig").engine;
+const engine = @import("engine.zig").Engine;
 
 pub fn main() !void {
     engine.init();

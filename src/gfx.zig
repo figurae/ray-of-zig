@@ -91,7 +91,10 @@ pub const Canvas = struct {
         var difference = (2 * rise) - run;
         var y = from.y;
 
-        for (t.usizeFromFloat(from.x)..(t.usizeFromFloat(to.x) + 1)) |int_x| {
+        const from_x = std.math.clamp(from.x, 0, config.canvas_width - 1);
+        const to_x = std.math.clamp(to.x, 0, config.canvas_width - 1);
+
+        for (t.usizeFromFloat(from_x)..(t.usizeFromFloat(to_x) + 1)) |int_x| {
             const x = t.f32FromInt(int_x);
 
             try self.putPixel(.{ .x = x, .y = y }, color);
@@ -123,7 +126,10 @@ pub const Canvas = struct {
         var difference = (2 * run) - rise;
         var x = from.x;
 
-        for (t.usizeFromFloat(from.y)..(t.usizeFromFloat(to.y) + 1)) |int_y| {
+        const from_y = std.math.clamp(from.y, 0, config.canvas_height - 1);
+        const to_y = std.math.clamp(to.y, 0, config.canvas_height - 1);
+
+        for (t.usizeFromFloat(from_y)..(t.usizeFromFloat(to_y) + 1)) |int_y| {
             const y = t.f32FromInt(int_y);
 
             try self.putPixel(.{ .x = x, .y = y }, color);
