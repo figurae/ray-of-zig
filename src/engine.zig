@@ -44,13 +44,9 @@ pub const engine = struct {
 
         angle += angular_speed * dt;
         pos2 = .{
-            .x = radius * @cos(angle) + pos1.x,
-			// NOTE: this floor shouldn't be necessary here, try modifying putPixel
-            .y = @floor(radius * @sin(angle) + pos1.y),
+            .x = @round(radius * @cos(angle) + pos1.x),
+            .y = @round(radius * @sin(angle) + pos1.y),
         };
-
-        // std.debug.print("pos1: {d}:{d}\n", .{ pos1.x, pos1.y });
-        // std.debug.print("pos2: {d}:{d}\n", .{ pos2.x, pos2.y });
 
         try canvas.drawLine(pos1, pos2, raylib.RED);
 
