@@ -2,10 +2,35 @@ const std = @import("std");
 
 const raylib = @import("raylib");
 const config = @import("config.zig");
+
+const m = @import("utils/math.zig");
 const t = @import("utils/types.zig");
 
 const GfxError = error{
     DrawingOutOfBounds,
+};
+
+pub const Context = struct {
+    const Self = @This();
+
+    canvas: *Canvas,
+    viewport: *Viewport,
+
+    pub fn drawPixel(self: *Self, pos: raylib.Vector2, color: raylib.Color) !void {
+        try self.viewport.putPixelInView(self.canvas, pos, color);
+    }
+
+    pub fn moveViewport(self: *Self, dir: raylib.Vector2) void {
+        self.viewport.pos = raylib.Vector2Add(self.viewport.pos, dir);
+    }
+
+    pub fn getWidth(self: *const Self) i32 {
+        return self.canvas.width;
+    }
+
+    pub fn getHeight(self: *const Self) i32 {
+        return self.canvas.height;
+    }
 };
 
 pub const Canvas = struct {
@@ -15,45 +40,16 @@ pub const Canvas = struct {
     height: i32,
     pixels: [config.canvas_width * config.canvas_height]raylib.Color,
 
-    pub fn putPixel(self: *Self, pos: raylib.Vector2, color: raylib.Color) !void {
+    pub fn putPixelOnCanvas(self: *Self, pos: raylib.Vector2, color: raylib.Color) !void {
         const x = t.i32FromFloat(@round(pos.x));
         const y = t.i32FromFloat(@round(pos.y));
 
-        // if (x < 0 or y < 0 or x >= self.width or y >= self.height)
-        //     return GfxError.DrawingOutOfBounds;
+        if (isPixelOutOfBounds(x, y, self.width, self.height))
+            return GfxError.DrawingOutOfBounds;
 
-        // NOTE: remove this bounding later, this isn't putPixel's business
-        const index = @as(usize, @intCast(@abs(self.width * y + x)));
-        const max_index = config.canvas_width * config.canvas_height - 1;
-        const i = if (index > max_index) max_index else index;
+        const index = @as(usize, @intCast(self.width * y + x));
 
-        self.pixels[i] = color;
-    }
-
-    // NOTE: this should be moved to another level of abstraction
-    // to allow drawing outside the screen area
-    pub fn drawLine(
-        self: *Self,
-        from: raylib.Vector2,
-        to: raylib.Vector2,
-        color: raylib.Color,
-    ) !void {
-        const run = to.x - from.x;
-        const rise = to.y - from.y;
-
-        if (@abs(rise) < @abs(run)) {
-            if (from.x > to.x) {
-                try self.drawLineLow(to, from, color);
-            } else {
-                try self.drawLineLow(from, to, color);
-            }
-        } else {
-            if (from.y > to.y) {
-                try self.drawLineHigh(to, from, color);
-            } else {
-                try self.drawLineHigh(from, to, color);
-            }
-        }
+        self.pixels[index] = color;
     }
 
     pub fn clear(self: *Self, color: raylib.Color) void {
@@ -71,75 +67,31 @@ pub const Canvas = struct {
             .mipmaps = 1,
         };
     }
+};
 
-    // NOTE: this should be possible to simplify into a single function
-    fn drawLineLow(
-        self: *Self,
-        from: raylib.Vector2,
-        to: raylib.Vector2,
+pub const Viewport = struct {
+    pos: raylib.Vector2,
+
+    pub fn putPixelInView(
+        self: *const Viewport,
+        canvas: *Canvas,
+        pixel_pos: raylib.Vector2,
         color: raylib.Color,
     ) !void {
-        var y_dir: f32 = 1;
-        var run = to.x - from.x;
-        var rise = to.y - from.y;
+        const actual_pos = raylib.Vector2Subtract(pixel_pos, self.pos);
 
-        if (rise < 0) {
-            y_dir = -1;
-            rise = -rise;
-        }
-
-        var difference = (2 * rise) - run;
-        var y = from.y;
-
-        const from_x = std.math.clamp(from.x, 0, config.canvas_width - 1);
-        const to_x = std.math.clamp(to.x, 0, config.canvas_width - 1);
-
-        for (t.usizeFromFloat(from_x)..(t.usizeFromFloat(to_x) + 1)) |int_x| {
-            const x = t.f32FromInt(int_x);
-
-            try self.putPixel(.{ .x = x, .y = y }, color);
-
-            if (difference > 0) {
-                y += y_dir;
-                difference += (2 * (rise - run));
-            } else {
-                difference += 2 * rise;
-            }
-        }
-    }
-
-    fn drawLineHigh(
-        self: *Self,
-        from: raylib.Vector2,
-        to: raylib.Vector2,
-        color: raylib.Color,
-    ) !void {
-        var x_dir: f32 = 1;
-        var run = to.x - from.x;
-        var rise = to.y - from.y;
-
-        if (run < 0) {
-            x_dir = -1;
-            run = -run;
-        }
-
-        var difference = (2 * run) - rise;
-        var x = from.x;
-
-        const from_y = std.math.clamp(from.y, 0, config.canvas_height - 1);
-        const to_y = std.math.clamp(to.y, 0, config.canvas_height - 1);
-
-        for (t.usizeFromFloat(from_y)..(t.usizeFromFloat(to_y) + 1)) |int_y| {
-            const y = t.f32FromInt(int_y);
-
-            try self.putPixel(.{ .x = x, .y = y }, color);
-
-            if (difference > 0) {
-                x += x_dir;
-                difference += (2 * (run - rise));
-            } else {
-                difference += 2 * run;
-            }
+        if (!isPixelOutOfBounds(
+            t.i32FromFloat(@round(actual_pos.x)),
+            t.i32FromFloat(@round(actual_pos.y)),
+            canvas.width,
+            canvas.height,
+        )) {
+            try canvas.putPixelOnCanvas(actual_pos, color);
         }
     }
 };
+
+fn isPixelOutOfBounds(x: i32, y: i32, width: i32, height: i32) bool {
+    const isPixelOob = x < 0 or y < 0 or x >= width or y >= height;
+    return isPixelOob;
+}

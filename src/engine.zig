@@ -4,31 +4,21 @@ const raylib = @import("raylib");
 const config = @import("config.zig");
 const gfx = @import("gfx.zig");
 const fun = @import("fun.zig");
+const primitives = @import("primitives.zig");
 
 const m = @import("utils/math.zig");
 const t = @import("utils/types.zig");
 
-const Viewport = struct {
-    pos: raylib.Vector2,
-    width: i32,
-    height: i32,
-};
-
 pub const Engine = struct {
-    var canvas = gfx.Canvas{
-        .width = config.canvas_width,
-        .height = config.canvas_height,
-        .pixels = [_]raylib.Color{raylib.RAYWHITE} ** (config.canvas_width * config.canvas_height),
-    };
-    var viewport = Viewport{
-        .pos = raylib.Vector2{ .x = 0, .y = 0 },
-        .width = config.canvas_width,
-        .height = config.canvas_height,
-    };
-
     var random: std.rand.Random = undefined;
+
+    var canvas: gfx.Canvas = undefined;
+    var viewport: gfx.Viewport = undefined;
+    var context: gfx.Context = undefined;
+
     var image: raylib.Image = undefined;
     var texture: raylib.Texture2D = undefined;
+
     var dancing_lines: [100]fun.DancingLine = undefined;
 
     pub fn init() void {
@@ -38,8 +28,23 @@ pub const Engine = struct {
 
         var pcg = std.rand.Pcg.init(@bitCast(std.time.timestamp()));
         random = pcg.random();
-        image = canvas.getImage();
+
+        canvas = gfx.Canvas{
+            .width = config.canvas_width,
+            .height = config.canvas_height,
+            .pixels = [_]raylib.Color{raylib.RAYWHITE} ** (config.canvas_width * config.canvas_height),
+        };
+        viewport = gfx.Viewport{
+            .pos = raylib.Vector2{ .x = 0, .y = 0 },
+        };
+        context = .{
+            .canvas = &canvas,
+            .viewport = &viewport,
+        };
+
+        image = context.canvas.getImage();
         texture = raylib.LoadTextureFromImage(image);
+
         for (&dancing_lines) |*line| {
             line.* = fun.DancingLine.init(&random, null, null, null, null, null);
         }
@@ -50,8 +55,8 @@ pub const Engine = struct {
     pub fn update(dt: f32) !void {
         // TODO: don't resize window manually, make ingame buttons, check this only on button press
         const integer_scale = m.getIntegerScale(
-            canvas.width,
-            canvas.height,
+            context.getWidth(),
+            context.getHeight(),
             raylib.GetScreenWidth(),
             raylib.GetScreenHeight(),
         );
@@ -59,19 +64,30 @@ pub const Engine = struct {
         raylib.BeginDrawing();
         defer raylib.EndDrawing();
 
-        if (raylib.IsKeyDown(.KEY_D)) viewport.pos.x += 1;
-        if (raylib.IsKeyDown(.KEY_A)) viewport.pos.x -= 1;
-        if (raylib.IsKeyDown(.KEY_W)) viewport.pos.y -= 1;
-        if (raylib.IsKeyDown(.KEY_S)) viewport.pos.y += 1;
+        // NOTE: does this have to be instantiated?
+        const dir = m.Vector2Direction{};
 
-        canvas.clear(raylib.RAYWHITE);
+        if (raylib.IsKeyDown(.KEY_D)) context.moveViewport(dir.right);
+        if (raylib.IsKeyDown(.KEY_A)) context.moveViewport(dir.left);
+        if (raylib.IsKeyDown(.KEY_W)) context.moveViewport(dir.up);
+        if (raylib.IsKeyDown(.KEY_S)) context.moveViewport(dir.down);
+
+        context.canvas.clear(raylib.RAYWHITE);
+
+        try context.viewport.putPixelInView(context.canvas, .{ .x = 30, .y = 30 }, raylib.PINK);
+        try primitives.drawLine(&context, .{ .x = 40, .y = 50 }, .{ .x = 120, .y = 150 }, raylib.RED);
 
         for (&dancing_lines) |*line| {
             line.update(dt);
-            try canvas.drawLine(raylib.Vector2Add(line.pos_1, viewport.pos), raylib.Vector2Add(line.pos_2, viewport.pos), line.color);
+            try primitives.drawLine(
+                &context,
+                line.pos_1,
+                line.pos_2,
+                line.color,
+            );
         }
 
-        raylib.UpdateTexture(texture, &canvas.pixels);
+        raylib.UpdateTexture(texture, &context.canvas.pixels);
         raylib.DrawTextureEx(texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
 
         raylib.DrawFPS(10, 10);
