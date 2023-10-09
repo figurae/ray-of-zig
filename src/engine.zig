@@ -42,7 +42,7 @@ pub const Engine = struct {
             .viewport = &viewport,
         };
 
-        image = context.canvas.getImage();
+        image = canvas.getImage();
         texture = raylib.LoadTextureFromImage(image);
 
         for (&dancing_lines) |*line| {
@@ -55,8 +55,8 @@ pub const Engine = struct {
     pub fn update(dt: f32) !void {
         // TODO: don't resize window manually, make ingame buttons, check this only on button press
         const integer_scale = m.getIntegerScale(
-            context.getWidth(),
-            context.getHeight(),
+            canvas.width,
+            canvas.height,
             raylib.GetScreenWidth(),
             raylib.GetScreenHeight(),
         );
@@ -67,14 +67,13 @@ pub const Engine = struct {
         // NOTE: does this have to be instantiated?
         const dir = m.Vector2Direction{};
 
-        if (raylib.IsKeyDown(.KEY_D)) context.moveViewport(dir.right);
-        if (raylib.IsKeyDown(.KEY_A)) context.moveViewport(dir.left);
-        if (raylib.IsKeyDown(.KEY_W)) context.moveViewport(dir.up);
-        if (raylib.IsKeyDown(.KEY_S)) context.moveViewport(dir.down);
+        if (raylib.IsKeyDown(.KEY_D)) viewport.move(dir.right);
+        if (raylib.IsKeyDown(.KEY_A)) viewport.move(dir.left);
+        if (raylib.IsKeyDown(.KEY_W)) viewport.move(dir.up);
+        if (raylib.IsKeyDown(.KEY_S)) viewport.move(dir.down);
 
         context.canvas.clear(raylib.RAYWHITE);
 
-        context.viewport.putPixelInView(context.canvas, .{ .x = 30, .y = 30 }, raylib.PINK);
         primitives.drawLine(&context, .{ .x = 40, .y = 50 }, .{ .x = 120, .y = 150 }, raylib.RED);
 
         for (&dancing_lines) |*line| {
@@ -87,7 +86,7 @@ pub const Engine = struct {
             );
         }
 
-        raylib.UpdateTexture(texture, &context.canvas.pixels);
+        raylib.UpdateTexture(texture, &canvas.pixels);
         raylib.DrawTextureEx(texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
 
         raylib.DrawFPS(10, 10);
