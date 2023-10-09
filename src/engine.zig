@@ -74,12 +74,12 @@ pub const Engine = struct {
 
         context.canvas.clear(raylib.RAYWHITE);
 
-        try context.viewport.putPixelInView(context.canvas, .{ .x = 30, .y = 30 }, raylib.PINK);
-        try primitives.drawLine(&context, .{ .x = 40, .y = 50 }, .{ .x = 120, .y = 150 }, raylib.RED);
+        context.viewport.putPixelInView(context.canvas, .{ .x = 30, .y = 30 }, raylib.PINK);
+        primitives.drawLine(&context, .{ .x = 40, .y = 50 }, .{ .x = 120, .y = 150 }, raylib.RED);
 
         for (&dancing_lines) |*line| {
             line.update(dt);
-            try primitives.drawLine(
+            primitives.drawLine(
                 &context,
                 line.pos_1,
                 line.pos_2,

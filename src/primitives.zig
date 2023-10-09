@@ -11,21 +11,21 @@ pub fn drawLine(
     from: raylib.Vector2,
     to: raylib.Vector2,
     color: raylib.Color,
-) !void {
+) void {
     const run = to.x - from.x;
     const rise = to.y - from.y;
 
     if (@abs(rise) < @abs(run)) {
         if (from.x > to.x) {
-            try drawLineLow(context, to, from, color);
+            drawLineLow(context, to, from, color);
         } else {
-            try drawLineLow(context, from, to, color);
+            drawLineLow(context, from, to, color);
         }
     } else {
         if (from.y > to.y) {
-            try drawLineHigh(context, to, from, color);
+            drawLineHigh(context, to, from, color);
         } else {
-            try drawLineHigh(context, from, to, color);
+            drawLineHigh(context, from, to, color);
         }
     }
 }
@@ -36,7 +36,7 @@ fn drawLineLow(
     from: raylib.Vector2,
     to: raylib.Vector2,
     color: raylib.Color,
-) !void {
+) void {
     var y_dir: f32 = 1;
     var run = to.x - from.x;
     var rise = to.y - from.y;
@@ -56,7 +56,7 @@ fn drawLineLow(
     for (t.usizeFromFloat(from_x)..(t.usizeFromFloat(to_x) + 1)) |int_x| {
         const x = t.f32FromInt(int_x);
 
-        try context.drawPixel(.{ .x = x, .y = y }, color);
+        context.drawPixel(.{ .x = x, .y = y }, color);
 
         if (difference > 0) {
             y += y_dir;
@@ -72,7 +72,7 @@ fn drawLineHigh(
     from: raylib.Vector2,
     to: raylib.Vector2,
     color: raylib.Color,
-) !void {
+) void {
     var x_dir: f32 = 1;
     var run = to.x - from.x;
     var rise = to.y - from.y;
@@ -92,7 +92,7 @@ fn drawLineHigh(
     for (t.usizeFromFloat(from_y)..(t.usizeFromFloat(to_y) + 1)) |int_y| {
         const y = t.f32FromInt(int_y);
 
-        try context.drawPixel(.{ .x = x, .y = y }, color);
+        context.drawPixel(.{ .x = x, .y = y }, color);
 
         if (difference > 0) {
             x += x_dir;

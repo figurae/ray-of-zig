@@ -6,18 +6,14 @@ const config = @import("config.zig");
 const m = @import("utils/math.zig");
 const t = @import("utils/types.zig");
 
-const GfxError = error{
-    DrawingOutOfBounds,
-};
-
 pub const Context = struct {
     const Self = @This();
 
     canvas: *Canvas,
     viewport: *Viewport,
 
-    pub fn drawPixel(self: *Self, pos: raylib.Vector2, color: raylib.Color) !void {
-        try self.viewport.putPixelInView(self.canvas, pos, color);
+    pub fn drawPixel(self: *Self, pos: raylib.Vector2, color: raylib.Color) void {
+        self.viewport.putPixelInView(self.canvas, pos, color);
     }
 
     pub fn moveViewport(self: *Self, dir: raylib.Vector2) void {
@@ -40,15 +36,8 @@ pub const Canvas = struct {
     height: i32,
     pixels: [config.canvas_width * config.canvas_height]raylib.Color,
 
-    pub fn putPixelOnCanvas(self: *Self, pos: raylib.Vector2, color: raylib.Color) !void {
-        const x = t.i32FromFloat(@round(pos.x));
-        const y = t.i32FromFloat(@round(pos.y));
-
-        if (isPixelOutOfBounds(x, y, self.width, self.height))
-            return GfxError.DrawingOutOfBounds;
-
+    pub fn putPixelOnCanvas(self: *Self, x: i32, y: i32, color: raylib.Color) void {
         const index = @as(usize, @intCast(self.width * y + x));
-
         self.pixels[index] = color;
     }
 
@@ -77,16 +66,18 @@ pub const Viewport = struct {
         canvas: *Canvas,
         pixel_pos: raylib.Vector2,
         color: raylib.Color,
-    ) !void {
-        const actual_pos = raylib.Vector2Subtract(pixel_pos, self.pos);
+    ) void {
+        const pos_on_canvas = raylib.Vector2Subtract(pixel_pos, self.pos);
+        const x_on_canvas = t.i32FromFloat(@round(pos_on_canvas.x));
+        const y_on_canvas = t.i32FromFloat(@round(pos_on_canvas.y));
 
         if (!isPixelOutOfBounds(
-            t.i32FromFloat(@round(actual_pos.x)),
-            t.i32FromFloat(@round(actual_pos.y)),
+            x_on_canvas,
+            y_on_canvas,
             canvas.width,
             canvas.height,
         )) {
-            try canvas.putPixelOnCanvas(actual_pos, color);
+            canvas.putPixelOnCanvas(x_on_canvas, y_on_canvas, color);
         }
     }
 };
