@@ -14,12 +14,15 @@ pub const Engine = struct {
 
     var canvas: gfx.Canvas = undefined;
     var viewport: gfx.Viewport = undefined;
-    var context: gfx.Context = undefined;
+    var context: gfx.Context = .{
+        .canvas = &canvas,
+        .viewport = &viewport,
+    };
 
     var image: raylib.Image = undefined;
     var texture: raylib.Texture2D = undefined;
 
-    var dancing_lines: [100]fun.DancingLine = undefined;
+    var dancing_lines: [10]fun.DancingLine = undefined;
 
     pub fn init() void {
         raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
@@ -34,12 +37,9 @@ pub const Engine = struct {
             .height = config.canvas_height,
             .pixels = [_]raylib.Color{raylib.RAYWHITE} ** (config.canvas_width * config.canvas_height),
         };
+
         viewport = gfx.Viewport{
             .pos = raylib.Vector2{ .x = 0, .y = 0 },
-        };
-        context = .{
-            .canvas = &canvas,
-            .viewport = &viewport,
         };
 
         image = canvas.getImage();
