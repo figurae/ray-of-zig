@@ -26,8 +26,29 @@ pub const Engine = struct {
 
     pub fn init() void {
         raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
-        raylib.InitWindow(config.window_width, config.window_height, config.window_title);
-        raylib.SetTargetFPS(config.target_fps);
+        raylib.InitWindow(config.initial_window_width, config.initial_window_height, config.window_title);
+
+        const monitor = raylib.GetCurrentMonitor();
+        const monitor_width = raylib.GetMonitorWidth(monitor);
+        const monitor_height = raylib.GetMonitorHeight(monitor);
+        const window_resolution = m.getNextLargestScaledResolution(
+            .{
+                .width = monitor_width,
+                .height = monitor_height,
+            },
+            .{
+                .width = config.canvas_width,
+                .height = config.canvas_height,
+            },
+        );
+        raylib.SetWindowSize(window_resolution.width, window_resolution.height);
+        raylib.SetWindowPosition(
+            @divTrunc(monitor_width - window_resolution.width, 2),
+            @divTrunc(monitor_height - window_resolution.height, 2),
+        );
+
+        const target_fps = raylib.GetMonitorRefreshRate(raylib.GetCurrentMonitor());
+        raylib.SetTargetFPS(target_fps);
 
         var pcg = std.rand.Pcg.init(@bitCast(std.time.timestamp()));
         random = pcg.random();
@@ -55,10 +76,14 @@ pub const Engine = struct {
     pub fn update(dt: f32) !void {
         // TODO: don't resize window manually, make ingame buttons, check this only on button press
         const integer_scale = m.getIntegerScale(
-            canvas.width,
-            canvas.height,
-            raylib.GetScreenWidth(),
-            raylib.GetScreenHeight(),
+            .{
+                .width = canvas.width,
+                .height = canvas.height,
+            },
+            .{
+                .width = raylib.GetScreenWidth(),
+                .height = raylib.GetScreenHeight(),
+            },
         );
 
         raylib.BeginDrawing();
