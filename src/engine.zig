@@ -3,6 +3,7 @@ const raylib = @import("raylib");
 
 const config = @import("config.zig");
 const gfx = @import("gfx.zig");
+const bmp = @import("bmp.zig");
 const fun = @import("fun.zig");
 const primitives = @import("primitives.zig");
 
@@ -11,6 +12,8 @@ const t = @import("utils/types.zig");
 
 pub const Engine = struct {
     var random: std.rand.Random = undefined;
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
 
     var canvas: gfx.Canvas = undefined;
     var viewport: gfx.Viewport = undefined;
@@ -20,11 +23,13 @@ pub const Engine = struct {
     };
 
     var image: raylib.Image = undefined;
+    var bmp_pixels: bmp.Image = undefined;
+    var sprite_image: raylib.Image = undefined;
     var texture: raylib.Texture2D = undefined;
 
     var dancing_lines: [10]fun.DancingLine = undefined;
 
-    pub fn init() void {
+    pub fn init() !void {
         raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
         raylib.InitWindow(config.initial_window_width, config.initial_window_height, config.window_title);
 
@@ -57,6 +62,15 @@ pub const Engine = struct {
             .width = config.canvas_width,
             .height = config.canvas_height,
             .pixels = [_]raylib.Color{raylib.RAYWHITE} ** (config.canvas_width * config.canvas_height),
+        };
+
+        bmp_pixels = try bmp.getPixelsFromBmp(allocator, "test2.bmp");
+        sprite_image = .{
+            .data = bmp_pixels.pixels.ptr,
+            .width = bmp_pixels.width,
+            .height = bmp_pixels.height,
+            .format = @intFromEnum(raylib.PixelFormat.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8),
+            .mipmaps = 1,
         };
 
         viewport = gfx.Viewport{
@@ -111,6 +125,13 @@ pub const Engine = struct {
             );
         }
 
+        for (bmp_pixels.pixels, 0..) |pixel, i| {
+            const i_i32: i32 = @intCast(i);
+            const y = @divFloor(i_i32, bmp_pixels.width);
+            const x = @rem(i_i32, bmp_pixels.width);
+            context.drawPixel(.{ .x = t.f32FromInt(x), .y = t.f32FromInt(y) }, pixel);
+        }
+
         raylib.UpdateTexture(texture, &canvas.pixels);
         raylib.DrawTextureEx(texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
 
@@ -119,6 +140,7 @@ pub const Engine = struct {
 
     pub fn deinit() void {
         raylib.UnloadTexture(texture);
+        allocator.free(bmp_pixels.pixels);
         raylib.CloseWindow();
     }
 };
