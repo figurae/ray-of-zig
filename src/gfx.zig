@@ -76,6 +76,22 @@ pub const Viewport = struct {
     }
 };
 
+pub const Sprite = struct {
+    const Self = @This();
+
+    width: i32,
+    height: i32,
+    pixels: []raylib.Color,
+
+    pub fn init(image: raylib.Image) Self {
+        return .{
+            .width = image.width,
+            .height = image.height,
+            .pixels = image.data,
+        };
+    }
+};
+
 fn isPixelOutOfBounds(x: i32, y: i32, width: i32, height: i32) bool {
     return x < 0 or y < 0 or x >= width or y >= height;
 }
