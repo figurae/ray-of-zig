@@ -24,10 +24,10 @@ pub fn getNextLargestScaledResolution(
         original.width > 0 and
         original.height > 0);
 
-    const ratio = t.f32FromInt(original.width) / t.f32FromInt(original.height);
+    const ratio = t.f32FromInt(original.height) / t.f32FromInt(original.width);
 
-    var largest_height = max.height - @mod(max.height, original.height);
-    var largest_width = t.i32FromFloat(@round(t.f32FromInt(largest_height) * ratio));
+    var largest_width = max.width - @mod(max.width, original.width);
+    var largest_height = t.i32FromFloat(@round(t.f32FromInt(largest_width) * ratio));
 
     // NOTE: this is for screens with weird aspect ratios
     while (largest_height >= max.height or largest_width >= max.width) {
