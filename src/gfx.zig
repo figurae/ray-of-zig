@@ -17,7 +17,7 @@ pub const Context = struct {
         self.viewport.putPixelInView(self.canvas, pos, color);
     }
 
-    pub fn drawSprite(self: *Self, pos: raylib.Vector2, sprite: *bmp.Image) void {
+    pub fn drawSprite(self: *Self, pos: raylib.Vector2, sprite: *bmp.Bitmap) void {
         for (sprite.pixels, 0..) |pixel, i| {
             const i_i32: i32 = @intCast(i);
             const y = @divFloor(i_i32, sprite.width);

@@ -34,9 +34,9 @@ const DibHeader = packed struct {
 };
 
 // NOTE: it would be nice to have a deinit()
-pub const Image = struct { width: i32, height: i32, pixels: []raylib.Color };
+pub const Bitmap = struct { width: i32, height: i32, pixels: []raylib.Color };
 
-pub fn getPixelsFromBmp(allocator: std.mem.Allocator, filename: []const u8) !Image {
+pub fn getPixelsFromBmp(allocator: std.mem.Allocator, filename: []const u8) !Bitmap {
     const file = try std.fs.cwd().openFile(filename, .{});
     defer file.close();
 

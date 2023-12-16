@@ -6,6 +6,7 @@ const gfx = @import("gfx.zig");
 const bmp = @import("bmp.zig");
 const fun = @import("fun.zig");
 const primitives = @import("primitives.zig");
+const assets = @import("assets.zig").Assets;
 
 const m = @import("utils/math.zig");
 const t = @import("utils/types.zig");
@@ -15,6 +16,8 @@ pub const Engine = struct {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
+    // NOTE: I think I don't have to instantiate these at all, just
+    // importing these structs at the top level of this file should suffice
     var canvas: gfx.Canvas = undefined;
     var viewport: gfx.Viewport = undefined;
     var context: gfx.Context = .{
@@ -24,8 +27,6 @@ pub const Engine = struct {
 
     var image: raylib.Image = undefined;
     var texture: raylib.Texture2D = undefined;
-    var bg_image: bmp.Image = undefined;
-    var sprite_image: bmp.Image = undefined;
 
     var dancing_lines: [10]fun.DancingLine = undefined;
 
@@ -67,8 +68,7 @@ pub const Engine = struct {
             .pixels = [_]raylib.Color{raylib.RAYWHITE} ** (config.canvas_width * config.canvas_height),
         };
 
-        bg_image = try bmp.getPixelsFromBmp(allocator, "test2.bmp");
-        sprite_image = try bmp.getPixelsFromBmp(allocator, "sprite.bmp");
+        try assets.init(allocator, &[_][]const u8{ "test2.bmp", "sprite.bmp" });
 
         viewport = gfx.Viewport{
             .pos = raylib.Vector2{ .x = 0, .y = 0 },
@@ -110,14 +110,14 @@ pub const Engine = struct {
 
         context.canvas.clear(raylib.RAYWHITE);
 
-        context.drawSprite(.{ .x = 0, .y = 0 }, &bg_image);
+        context.drawSprite(.{ .x = 0, .y = 0 }, &assets.images[0]);
 
         if (raylib.IsKeyDown(.KEY_RIGHT)) sprite_x += 1;
         if (raylib.IsKeyDown(.KEY_LEFT)) sprite_x -= 1;
         if (raylib.IsKeyDown(.KEY_UP)) sprite_y -= 1;
         if (raylib.IsKeyDown(.KEY_DOWN)) sprite_y += 1;
 
-        context.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &sprite_image);
+        context.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &assets.images[1]);
 
         for (&dancing_lines) |*line| {
             line.update(dt);
@@ -137,8 +137,7 @@ pub const Engine = struct {
 
     pub fn deinit() void {
         raylib.UnloadTexture(texture);
-        allocator.free(bg_image.pixels);
-        allocator.free(sprite_image.pixels);
+        assets.deinit(allocator);
         raylib.CloseWindow();
     }
 };
