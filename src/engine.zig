@@ -110,14 +110,14 @@ pub const Engine = struct {
 
         context.canvas.clear(raylib.RAYWHITE);
 
-        context.drawSprite(.{ .x = 0, .y = 0 }, &assets.images[0]);
+        context.drawSprite(.{ .x = 0, .y = 0 }, &assets.bitmaps.get("test2").?);
 
         if (raylib.IsKeyDown(.KEY_RIGHT)) sprite_x += 1;
         if (raylib.IsKeyDown(.KEY_LEFT)) sprite_x -= 1;
         if (raylib.IsKeyDown(.KEY_UP)) sprite_y -= 1;
         if (raylib.IsKeyDown(.KEY_DOWN)) sprite_y += 1;
 
-        context.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &assets.images[1]);
+        context.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &assets.bitmaps.get("sprite").?);
 
         for (&dancing_lines) |*line| {
             line.update(dt);
