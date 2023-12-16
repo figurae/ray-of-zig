@@ -82,7 +82,14 @@ pub fn getPixelsFromBmp(allocator: std.mem.Allocator, filename: []const u8) !Ima
 }
 
 fn readColors(allocator: std.mem.Allocator, reader: anytype, size: usize) ![]raylib.Color {
+    // NOTE: why is this const? it's mutated by the reader...
     const buffer = try allocator.alloc(u8, size);
     try reader.readNoEof(buffer);
-    return std.mem.bytesAsSlice(raylib.Color, buffer);
+
+    const colors = std.mem.bytesAsSlice(raylib.Color, buffer);
+    for (colors) |*color| {
+        std.mem.swap(u8, &color.r, &color.b);
+    }
+
+    return colors;
 }
