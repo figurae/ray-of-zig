@@ -2,6 +2,7 @@ const std = @import("std");
 
 const raylib = @import("raylib");
 const config = @import("config.zig");
+const bmp = @import("bmp.zig");
 
 const m = @import("utils/math.zig");
 const t = @import("utils/types.zig");
@@ -14,6 +15,24 @@ pub const Context = struct {
 
     pub fn drawPixel(self: *Self, pos: raylib.Vector2, color: raylib.Color) void {
         self.viewport.putPixelInView(self.canvas, pos, color);
+    }
+
+    pub fn drawSprite(self: *Self, pos: raylib.Vector2, sprite: *bmp.Image) void {
+        for (sprite.pixels, 0..) |pixel, i| {
+            const i_i32: i32 = @intCast(i);
+            const y = @divFloor(i_i32, sprite.width);
+            const x = @rem(i_i32, sprite.width);
+            // TODO: handle alpha blending
+            if (pixel.a == 255) {
+                self.drawPixel(
+                    .{
+                        .x = t.f32FromInt(x) + pos.x,
+                        .y = t.f32FromInt(y) + pos.y,
+                    },
+                    pixel,
+                );
+            }
+        }
     }
 };
 
@@ -73,22 +92,6 @@ pub const Viewport = struct {
 
     pub fn move(self: *Self, dir: raylib.Vector2) void {
         self.pos = raylib.Vector2Add(self.pos, dir);
-    }
-};
-
-pub const Sprite = struct {
-    const Self = @This();
-
-    width: i32,
-    height: i32,
-    pixels: []raylib.Color,
-
-    pub fn init(image: raylib.Image) Self {
-        return .{
-            .width = image.width,
-            .height = image.height,
-            .pixels = image.data,
-        };
     }
 };
 

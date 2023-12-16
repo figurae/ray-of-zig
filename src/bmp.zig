@@ -86,6 +86,7 @@ fn readColors(allocator: std.mem.Allocator, reader: anytype, size: usize) ![]ray
     const buffer = try allocator.alloc(u8, size);
     try reader.readNoEof(buffer);
 
+    // same here...
     const colors = std.mem.bytesAsSlice(raylib.Color, buffer);
     for (colors) |*color| {
         std.mem.swap(u8, &color.r, &color.b);

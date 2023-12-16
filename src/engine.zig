@@ -23,16 +23,14 @@ pub const Engine = struct {
     };
 
     var image: raylib.Image = undefined;
-    var bg_pixels: bmp.Image = undefined;
-    var bg_image: raylib.Image = undefined;
-    var sprite_pixels: bmp.Image = undefined;
-    var sprite_image: raylib.Image = undefined;
     var texture: raylib.Texture2D = undefined;
+    var bg_image: bmp.Image = undefined;
+    var sprite_image: bmp.Image = undefined;
 
     var dancing_lines: [10]fun.DancingLine = undefined;
 
-    var sprite_x: i32 = 0;
-    var sprite_y: i32 = 0;
+    var sprite_x: f32 = 0;
+    var sprite_y: f32 = 0;
 
     pub fn init() !void {
         raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
@@ -69,24 +67,8 @@ pub const Engine = struct {
             .pixels = [_]raylib.Color{raylib.RAYWHITE} ** (config.canvas_width * config.canvas_height),
         };
 
-        bg_pixels = try bmp.getPixelsFromBmp(allocator, "test2.bmp");
-        // TODO: this could be automated
-        bg_image = .{
-            .data = bg_pixels.pixels.ptr,
-            .width = bg_pixels.width,
-            .height = bg_pixels.height,
-            .format = @intFromEnum(raylib.PixelFormat.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8),
-            .mipmaps = 1,
-        };
-
-        sprite_pixels = try bmp.getPixelsFromBmp(allocator, "sprite.bmp");
-        sprite_image = .{
-            .data = sprite_pixels.pixels.ptr,
-            .width = sprite_pixels.width,
-            .height = sprite_pixels.height,
-            .format = @intFromEnum(raylib.PixelFormat.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8),
-            .mipmaps = 1,
-        };
+        bg_image = try bmp.getPixelsFromBmp(allocator, "test2.bmp");
+        sprite_image = try bmp.getPixelsFromBmp(allocator, "sprite.bmp");
 
         viewport = gfx.Viewport{
             .pos = raylib.Vector2{ .x = 0, .y = 0 },
@@ -128,7 +110,14 @@ pub const Engine = struct {
 
         context.canvas.clear(raylib.RAYWHITE);
 
-        primitives.drawLine(&context, .{ .x = 40, .y = 50 }, .{ .x = 120, .y = 150 }, raylib.RED);
+        context.drawSprite(.{ .x = 0, .y = 0 }, &bg_image);
+
+        if (raylib.IsKeyDown(.KEY_RIGHT)) sprite_x += 1;
+        if (raylib.IsKeyDown(.KEY_LEFT)) sprite_x -= 1;
+        if (raylib.IsKeyDown(.KEY_UP)) sprite_y -= 1;
+        if (raylib.IsKeyDown(.KEY_DOWN)) sprite_y += 1;
+
+        context.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &sprite_image);
 
         for (&dancing_lines) |*line| {
             line.update(dt);
@@ -140,27 +129,6 @@ pub const Engine = struct {
             );
         }
 
-        for (bg_pixels.pixels, 0..) |pixel, i| {
-            const i_i32: i32 = @intCast(i);
-            const y = @divFloor(i_i32, bg_pixels.width);
-            const x = @rem(i_i32, bg_pixels.width);
-            context.drawPixel(.{ .x = t.f32FromInt(x), .y = t.f32FromInt(y) }, pixel);
-        }
-
-        if (raylib.IsKeyDown(.KEY_RIGHT)) sprite_x += 1;
-        if (raylib.IsKeyDown(.KEY_LEFT)) sprite_x -= 1;
-        if (raylib.IsKeyDown(.KEY_UP)) sprite_y -= 1;
-        if (raylib.IsKeyDown(.KEY_DOWN)) sprite_y += 1;
-
-        for (sprite_pixels.pixels, 0..) |pixel, i| {
-            const i_i32: i32 = @intCast(i);
-            const y = @divFloor(i_i32, sprite_pixels.width);
-            const x = @rem(i_i32, sprite_pixels.width);
-            if (pixel.a == 255) {
-                context.drawPixel(.{ .x = t.f32FromInt(x + sprite_x), .y = t.f32FromInt(y + sprite_y) }, pixel);
-            }
-        }
-
         raylib.UpdateTexture(texture, &canvas.pixels);
         raylib.DrawTextureEx(texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
 
@@ -169,7 +137,8 @@ pub const Engine = struct {
 
     pub fn deinit() void {
         raylib.UnloadTexture(texture);
-        allocator.free(bg_pixels.pixels);
+        allocator.free(bg_image.pixels);
+        allocator.free(sprite_image.pixels);
         raylib.CloseWindow();
     }
 };
