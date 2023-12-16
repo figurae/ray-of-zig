@@ -38,7 +38,7 @@ fn drawLineLow(
     color: raylib.Color,
 ) void {
     var y_dir: f32 = 1;
-    var run = to.x - from.x;
+    const run = to.x - from.x;
     var rise = to.y - from.y;
 
     if (rise < 0) {
@@ -75,7 +75,7 @@ fn drawLineHigh(
 ) void {
     var x_dir: f32 = 1;
     var run = to.x - from.x;
-    var rise = to.y - from.y;
+    const rise = to.y - from.y;
 
     if (run < 0) {
         x_dir = -1;

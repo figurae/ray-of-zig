@@ -57,7 +57,7 @@ pub fn getPixelsFromBmp(allocator: std.mem.Allocator, filename: []const u8) !Ima
 
     var colors = try readColors(allocator, reader, image_size);
 
-    var tmp: []raylib.Color = try allocator.alloc(raylib.Color, width);
+    const tmp: []raylib.Color = try allocator.alloc(raylib.Color, width);
     defer allocator.free(tmp);
 
     for (0..@as(usize, @divFloor(height, 2))) |i| {
@@ -66,8 +66,8 @@ pub fn getPixelsFromBmp(allocator: std.mem.Allocator, filename: []const u8) !Ima
         const j_range_end = colors.len - width * i;
         const j_range_start = j_range_end - width;
 
-        var i_range = colors[i_range_start..i_range_end];
-        var j_range = colors[j_range_start..j_range_end];
+        const i_range = colors[i_range_start..i_range_end];
+        const j_range = colors[j_range_start..j_range_end];
 
         @memcpy(tmp, i_range);
         @memcpy(i_range, j_range);
@@ -82,7 +82,7 @@ pub fn getPixelsFromBmp(allocator: std.mem.Allocator, filename: []const u8) !Ima
 }
 
 fn readColors(allocator: std.mem.Allocator, reader: anytype, size: usize) ![]raylib.Color {
-    var buffer = try allocator.alloc(u8, size);
+    const buffer = try allocator.alloc(u8, size);
     try reader.readNoEof(buffer);
     return std.mem.bytesAsSlice(raylib.Color, buffer);
 }
