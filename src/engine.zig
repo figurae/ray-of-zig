@@ -12,6 +12,29 @@ const m = @import("utils/math.zig");
 const t = @import("utils/types.zig");
 
 pub const Engine = struct {
+    const frequency: f32 = 440;
+    const amplitude: f32 = 0.2;
+    const phase: f32 = 0;
+    const sampleRate: f32 = 44100;
+    const a4_freq: f32 = sampleRate / frequency;
+    const pi = std.math.pi;
+
+    const Oscillator = struct {
+        const Self = @This();
+
+        current_step: f32 = 0,
+        volume: f32 = amplitude,
+        step_size: f32 = (2 * pi) / a4_freq,
+
+        fn next(self: *Self) f32 {
+            const current_value = @sin(self.current_step);
+            self.current_step += self.step_size;
+            return current_value;
+        }
+    };
+
+    var o = Oscillator{};
+
     var random: std.rand.Random = undefined;
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
