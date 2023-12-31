@@ -42,8 +42,8 @@ pub fn getNextLargestScaledResolution(
 }
 
 pub const Vector2Direction = struct {
-    up: raylib.Vector2 = .{ .x = 0, .y = -1 },
-    down: raylib.Vector2 = .{ .x = 0, .y = 1 },
-    left: raylib.Vector2 = .{ .x = -1, .y = 0 },
-    right: raylib.Vector2 = .{ .x = 1, .y = 0 },
+    pub const up: raylib.Vector2 = .{ .x = 0, .y = -1 };
+    pub const down: raylib.Vector2 = .{ .x = 0, .y = 1 };
+    pub const left: raylib.Vector2 = .{ .x = -1, .y = 0 };
+    pub const right: raylib.Vector2 = .{ .x = 1, .y = 0 };
 };

@@ -143,8 +143,7 @@ pub const Engine = struct {
         raylib.BeginDrawing();
         defer raylib.EndDrawing();
 
-        // NOTE: does this have to be instantiated?
-        const dir = m.Vector2Direction{};
+        const dir = m.Vector2Direction;
 
         if (raylib.IsKeyDown(.KEY_D)) viewport.move(dir.right);
         if (raylib.IsKeyDown(.KEY_A)) viewport.move(dir.left);
