@@ -85,6 +85,7 @@ pub const Engine = struct {
         raylib.SetTextureFilter(texture, @intFromEnum(raylib.TextureFilter.TEXTURE_FILTER_POINT));
 
         try snd.init(allocator);
+        try snd.addOscilator("C1");
     }
 
     pub fn update(dt: f32) !void {
@@ -135,6 +136,8 @@ pub const Engine = struct {
         raylib.DrawTextureEx(texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
 
         raylib.DrawFPS(10, 10);
+
+        snd.getOscillator(0).frequency += 1;
     }
 
     pub fn deinit() void {

@@ -4,45 +4,30 @@ const raylib = @import("raylib");
 
 const t = @import("utils/types.zig");
 
+const a4_frequency = 440;
+
 pub const Snd = struct {
-    const frequency: f32 = 440;
-    const amplitude: f32 = 0.2;
-    const sample_rate: f32 = 48000;
+    const sample_rate = 48000;
+    const amplitude = 0.2;
     const max_samples_per_update: i32 = 4096;
-    const a4_freq: f32 = frequency / sample_rate;
-    const pi = std.math.pi;
 
+    var oscillators: std.ArrayList(Oscillator) = undefined;
     var notes: std.StringHashMap(f32) = undefined;
-
-    const Oscillator = struct {
-        const Self = @This();
-
-        current_step: f32 = 0,
-        volume: f32 = amplitude,
-
-        fn next(self: *Self) f32 {
-            const current_value = @sin(self.current_step * 2 * pi);
-
-            self.current_step += a4_freq;
-            if (self.current_step > 1) self.current_step -= 1;
-
-            return current_value;
-        }
-    };
-
-    var o = Oscillator{};
-
     var stream: raylib.AudioStream = undefined;
 
     fn audio_callback(any_buffer: ?*anyopaque, frames: u32) void {
         const buffer: []c_short = @as([*]c_short, @ptrCast(@alignCast(any_buffer.?)))[0..frames];
 
         for (buffer) |*sample| {
-            sample.* = @intFromFloat(o.next() * 32000);
+            if (oscillators.items.len > 0) {
+                sample.* = @intFromFloat(oscillators.items[0].next() * 32000);
+            }
         }
     }
 
     pub fn init(allocator: std.mem.Allocator) !void {
+        oscillators = std.ArrayList(Oscillator).init(allocator);
+
         notes = try generateNotes(allocator);
 
         raylib.InitAudioDevice();
@@ -51,7 +36,7 @@ pub const Snd = struct {
         stream = raylib.LoadAudioStream(@intFromFloat(sample_rate), 16, 1);
 
         raylib.SetAudioStreamCallback(stream, audio_callback);
-        // raylib.PlayAudioStream(stream);
+        raylib.PlayAudioStream(stream);
     }
 
     pub fn deinit(allocator: std.mem.Allocator) void {
@@ -62,8 +47,48 @@ pub const Snd = struct {
         while (iter.next()) |key| {
             allocator.free(key.*);
         }
-
         notes.deinit();
+
+        oscillators.deinit();
+    }
+
+    pub fn addOscilator(initial_note: []const u8) !void {
+        try oscillators.append(Oscillator.init(
+            notes.get(initial_note) orelse a4_frequency,
+            sample_rate,
+            amplitude,
+        ));
+    }
+
+    pub fn getOscillator(index: usize) *Oscillator {
+        return &oscillators.items[index];
+    }
+};
+
+const Oscillator = struct {
+    const Self = @This();
+
+    current_step: f32,
+    frequency: f32,
+    sample_rate: f32,
+    amplitude: f32,
+
+    fn init(frequency: f32, sample_rate: f32, amplitude: f32) Self {
+        return .{
+            .current_step = 0,
+            .frequency = frequency,
+            .sample_rate = sample_rate,
+            .amplitude = amplitude,
+        };
+    }
+
+    fn next(self: *Self) f32 {
+        const current_value = @sin(self.current_step * 2 * std.math.pi);
+
+        self.current_step += self.frequency / self.sample_rate;
+        if (self.current_step > 1) self.current_step -= 1;
+
+        return current_value;
     }
 };
 
@@ -77,7 +102,7 @@ fn generateNotes(allocator: std.mem.Allocator) !std.StringHashMap(f32) {
 
     for (0..note_count) |i| {
         const power = @as(i32, @intCast(i)) - a4_position;
-        const note_frequency = 440 * std.math.pow(f64, semitone_ratio, t.f32FromInt(power));
+        const note_frequency = a4_frequency * std.math.pow(f64, semitone_ratio, t.f32FromInt(power));
         const octave = @divFloor(i, 12);
         const note_index = @mod(i, 12);
         const note_name = note_names[note_index];
