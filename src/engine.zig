@@ -14,9 +14,9 @@ const t = @import("utils/types.zig");
 pub const Engine = struct {
     const frequency: f32 = 440;
     const amplitude: f32 = 0.2;
-    const phase: f32 = 0;
-    const sampleRate: f32 = 44100;
-    const a4_freq: f32 = sampleRate / frequency;
+    const sample_rate: f32 = 48000;
+    const max_samples_per_update: i32 = 4096;
+    const a4_freq: f32 = frequency / sample_rate;
     const pi = std.math.pi;
 
     const Oscillator = struct {
@@ -24,16 +24,28 @@ pub const Engine = struct {
 
         current_step: f32 = 0,
         volume: f32 = amplitude,
-        step_size: f32 = (2 * pi) / a4_freq,
 
         fn next(self: *Self) f32 {
-            const current_value = @sin(self.current_step);
-            self.current_step += self.step_size;
+            const current_value = @sin(self.current_step * 2 * pi);
+
+            self.current_step += a4_freq;
+            if (self.current_step > 1) self.current_step -= 1;
+
             return current_value;
         }
     };
 
     var o = Oscillator{};
+
+    var stream: raylib.AudioStream = undefined;
+
+    fn audio_callback(any_buffer: ?*anyopaque, frames: u32) void {
+        const buffer: []c_short = @as([*]c_short, @ptrCast(@alignCast(any_buffer.?)))[0..frames];
+
+        for (buffer) |*sample| {
+            sample.* = @intFromFloat(o.next() * 32000);
+        }
+    }
 
     var random: std.rand.Random = undefined;
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -105,6 +117,14 @@ pub const Engine = struct {
         }
 
         raylib.SetTextureFilter(texture, @intFromEnum(raylib.TextureFilter.TEXTURE_FILTER_POINT));
+
+        raylib.InitAudioDevice();
+
+        raylib.SetAudioStreamBufferSizeDefault(max_samples_per_update);
+        stream = raylib.LoadAudioStream(@intFromFloat(sample_rate), 16, 1);
+
+        raylib.SetAudioStreamCallback(stream, audio_callback);
+        raylib.PlayAudioStream(stream);
     }
 
     pub fn update(dt: f32) !void {
@@ -161,6 +181,10 @@ pub const Engine = struct {
     pub fn deinit() void {
         raylib.UnloadTexture(texture);
         assets.deinit(allocator);
+
+        raylib.UnloadAudioStream(stream);
+        raylib.CloseAudioDevice();
+
         raylib.CloseWindow();
     }
 };
