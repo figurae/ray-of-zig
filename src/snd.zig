@@ -76,11 +76,11 @@ pub const Snd = struct {
         };
 
         fn init(config: Config) Self {
-            const attack_samples = @round(config.attack_time * sample_rate);
+            const attack_samples = calculateSamples(config.attack_time);
             const attack_step = 1 / attack_samples * (config.amplitude_max - config.amplitude_start);
-            const decay_samples = @round(config.decay_time * sample_rate);
+            const decay_samples = calculateSamples(config.decay_time);
             const decay_step = 1 / decay_samples * (config.amplitude_sustain - config.amplitude_max);
-            const release_samples = @round(config.release_time * sample_rate);
+            const release_samples = calculateSamples(config.release_time);
             const release_step = 1 / release_samples * (config.amplitude_end - config.amplitude_sustain);
 
             return .{
@@ -93,7 +93,7 @@ pub const Snd = struct {
                 .release_time = config.release_time,
                 .release_samples = release_samples,
                 .release_step = release_step,
-                .amplitude_start = if (config.attack_time == 0) config.amplitude_max else config.amplitude_start,
+                .amplitude_start = config.amplitude_start,
                 .amplitude_max = config.amplitude_max,
                 .amplitude_sustain = config.amplitude_sustain,
                 .amplitude_end = config.amplitude_end,
@@ -103,9 +103,9 @@ pub const Snd = struct {
 
         // TODO: don't pub this, make an interface
         pub fn reset(self: *Self) void {
-            self.attack_samples = self.attack_time * sample_rate;
-            self.decay_samples = self.decay_time * sample_rate;
-            self.release_samples = self.release_time * sample_rate;
+            self.attack_samples = calculateSamples(self.attack_time);
+            self.decay_samples = calculateSamples(self.decay_time);
+            self.release_samples = calculateSamples(self.release_time);
         }
 
         fn next(self: *Self) f32 {
@@ -124,6 +124,11 @@ pub const Snd = struct {
             }
 
             return std.math.clamp(self.current_output, 0, 1);
+        }
+
+        fn calculateSamples(time: f32) f32 {
+            const samples = @round(time * sample_rate);
+            return if (samples > 0) samples else 1;
         }
     };
 
