@@ -10,11 +10,10 @@ pub const Snd = struct {
     const default_amplitude = 0.2;
     const max_samples_per_update: i32 = 4096;
 
-    pub var frequencies: std.EnumArray(Note, f32) = undefined;
+    var frequencies: std.EnumArray(Note, f32) = undefined;
     var oscillators: std.ArrayList(Oscillator) = undefined;
     var stream: raylib.AudioStream = undefined;
-    // TODO: don't pub this, make an interface
-    pub var envelope: Envelope = undefined;
+    var envelope: Envelope = undefined;
 
     const Oscillator = struct {
         const Self = @This();
@@ -40,6 +39,13 @@ pub const Snd = struct {
             if (self.current_step > 1) self.current_step -= 1;
 
             return current_value * self.amplitude;
+        }
+
+        pub fn play(self: *Self, note: Note) void {
+            // NOTE: a global again... maybe create a sound context of some kind?
+            envelope.reset();
+            self.current_note = note;
+            self.frequency = frequencies.get(note);
         }
     };
 
@@ -101,11 +107,11 @@ pub const Snd = struct {
             };
         }
 
-        // TODO: don't pub this, make an interface
-        pub fn reset(self: *Self) void {
+        fn reset(self: *Self) void {
             self.attack_samples = calculateSamples(self.attack_time);
             self.decay_samples = calculateSamples(self.decay_time);
             self.release_samples = calculateSamples(self.release_time);
+            self.current_output = self.amplitude_start;
         }
 
         fn next(self: *Self) f32 {
