@@ -34,6 +34,9 @@ pub const Engine = struct {
     var sprite_x: f32 = 0;
     var sprite_y: f32 = 0;
 
+    var timer: f32 = 0;
+    var note: usize = 0;
+
     pub fn init() !void {
         raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
         raylib.InitWindow(config.initial_window_width, config.initial_window_height, config.window_title);
@@ -85,7 +88,7 @@ pub const Engine = struct {
         raylib.SetTextureFilter(texture, @intFromEnum(raylib.TextureFilter.TEXTURE_FILTER_POINT));
 
         try snd.init(allocator);
-        try snd.addOscilator("C1");
+        try snd.addOscilator(.c_flat_2);
     }
 
     pub fn update(dt: f32) !void {
@@ -137,14 +140,20 @@ pub const Engine = struct {
 
         raylib.DrawFPS(10, 10);
 
-        snd.getOscillator(0).frequency += 1;
+        timer += dt;
+
+        if (timer > 0.1) {
+            timer = 0;
+            snd.getOscillator(0).frequency = snd.notes.get(@enumFromInt(note));
+            note += 1;
+        }
     }
 
     pub fn deinit() void {
         raylib.UnloadTexture(texture);
         assets.deinit(allocator);
 
-        snd.deinit(allocator);
+        snd.deinit();
 
         raylib.CloseWindow();
     }

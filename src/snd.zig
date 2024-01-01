@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const raylib = @import("raylib");
+const Note = @import("note.zig").Note;
 
 const t = @import("utils/types.zig");
 
@@ -11,8 +12,8 @@ pub const Snd = struct {
     const amplitude = 0.2;
     const max_samples_per_update: i32 = 4096;
 
+    pub var notes: std.EnumArray(Note, f32) = undefined;
     var oscillators: std.ArrayList(Oscillator) = undefined;
-    var notes: std.StringHashMap(f32) = undefined;
     var stream: raylib.AudioStream = undefined;
 
     fn audio_callback(any_buffer: ?*anyopaque, frames: u32) void {
@@ -28,7 +29,7 @@ pub const Snd = struct {
     pub fn init(allocator: std.mem.Allocator) !void {
         oscillators = std.ArrayList(Oscillator).init(allocator);
 
-        notes = try generateNotes(allocator);
+        notes = generateNotes();
 
         raylib.InitAudioDevice();
 
@@ -39,22 +40,16 @@ pub const Snd = struct {
         raylib.PlayAudioStream(stream);
     }
 
-    pub fn deinit(allocator: std.mem.Allocator) void {
+    pub fn deinit() void {
         raylib.UnloadAudioStream(stream);
         raylib.CloseAudioDevice();
-
-        var iter = notes.keyIterator();
-        while (iter.next()) |key| {
-            allocator.free(key.*);
-        }
-        notes.deinit();
 
         oscillators.deinit();
     }
 
-    pub fn addOscilator(initial_note: []const u8) !void {
+    pub fn addOscilator(initial_note: Note) !void {
         try oscillators.append(Oscillator.init(
-            notes.get(initial_note) orelse a4_frequency,
+            notes.get(initial_note),
             sample_rate,
             amplitude,
         ));
@@ -92,24 +87,19 @@ const Oscillator = struct {
     }
 };
 
-fn generateNotes(allocator: std.mem.Allocator) !std.StringHashMap(f32) {
-    const semitone_ratio = std.math.pow(f64, 2, 1.0 / 12.0);
-    var notes = std.StringHashMap(f32).init(allocator);
+fn generateNotes() std.EnumArray(Note, f32) {
+    var notes = std.EnumArray(Note, f32).initUndefined();
 
+    const semitone_ratio = std.math.pow(f64, 2, 1.0 / 12.0);
     const note_count = 108;
     const a4_position = 57;
-    const note_names = [_][]const u8{ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
 
     for (0..note_count) |i| {
         const power = @as(i32, @intCast(i)) - a4_position;
         const note_frequency = a4_frequency * std.math.pow(f64, semitone_ratio, t.f32FromInt(power));
-        const octave = @divFloor(i, 12);
-        const note_index = @mod(i, 12);
-        const note_name = note_names[note_index];
+        const note_name: Note = @enumFromInt(i);
 
-        // NOTE: is this possible to do without an allocator? bufPrint fails
-        const full_note_name = try std.fmt.allocPrint(allocator, "{s}{d}", .{ note_name, octave });
-        try notes.put(full_note_name, @floatCast(note_frequency));
+        notes.set(note_name, @floatCast(note_frequency));
     }
 
     return notes;
