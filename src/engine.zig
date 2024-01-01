@@ -35,8 +35,7 @@ pub const Engine = struct {
     var sprite_y: f32 = 0;
 
     var timer: f32 = 0;
-    var note: usize = 0;
-    var note2: usize = 107;
+    var note: usize = 42;
 
     pub fn init() !void {
         raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
@@ -89,8 +88,7 @@ pub const Engine = struct {
         raylib.SetTextureFilter(texture, @intFromEnum(raylib.TextureFilter.TEXTURE_FILTER_POINT));
 
         try snd.init(allocator);
-        try snd.addOscilator(.c_flat_2);
-        try snd.addOscilator(.c_flat_8);
+        try snd.addOscilator(@enumFromInt(note));
     }
 
     pub fn update(dt: f32) !void {
@@ -144,12 +142,11 @@ pub const Engine = struct {
 
         timer += dt;
 
-        if (timer > 0.1) {
+        if (timer > 0.4) {
             timer = 0;
+            snd.envelope.reset();
             snd.getOscillator(0).frequency = snd.frequencies.get(@enumFromInt(note));
-            snd.getOscillator(1).frequency = snd.frequencies.get(@enumFromInt(note2));
             note += 1;
-            note2 -= 1;
         }
     }
 
