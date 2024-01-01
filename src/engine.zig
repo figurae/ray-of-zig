@@ -142,7 +142,7 @@ pub const Engine = struct {
 
         timer += dt;
 
-        if (timer > 0.4) {
+        if (timer > 0.3) {
             timer = 0;
             snd.envelope.reset();
             snd.getOscillator(0).frequency = snd.frequencies.get(@enumFromInt(note));

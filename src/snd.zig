@@ -65,38 +65,39 @@ pub const Snd = struct {
 
         current_output: f32,
 
-        // NOTE: a configuration tuple should be more elegant
-        fn init(
-            attack_time: f32,
-            decay_time: f32,
-            release_time: f32,
-            amplitude_start: f32,
-            amplitude_max: f32,
-            amplitude_sustain: f32,
-            amplitude_end: f32,
-        ) Self {
-            const attack_samples = attack_time * sample_rate;
-            const attack_step = 1 / attack_samples * @abs(amplitude_max - amplitude_start);
-            const decay_samples = decay_time * sample_rate;
-            const decay_step = 1 / decay_samples * @abs(amplitude_max - amplitude_sustain);
-            const release_samples = release_time * sample_rate;
-            const release_step = 1 / release_samples * @abs(amplitude_sustain - amplitude_end);
+        const Config = struct {
+            attack_time: f32 = 0.001,
+            decay_time: f32 = 0.15,
+            release_time: f32 = 0.2,
+            amplitude_start: f32 = 0,
+            amplitude_max: f32 = default_amplitude,
+            amplitude_sustain: f32 = std.math.clamp(default_amplitude - 1, 0, 1),
+            amplitude_end: f32 = 0,
+        };
+
+        fn init(config: Config) Self {
+            const attack_samples = @round(config.attack_time * sample_rate);
+            const attack_step = 1 / attack_samples * (config.amplitude_max - config.amplitude_start);
+            const decay_samples = @round(config.decay_time * sample_rate);
+            const decay_step = 1 / decay_samples * (config.amplitude_sustain - config.amplitude_max);
+            const release_samples = @round(config.release_time * sample_rate);
+            const release_step = 1 / release_samples * (config.amplitude_end - config.amplitude_sustain);
 
             return .{
-                .attack_time = attack_time,
+                .attack_time = config.attack_time,
                 .attack_samples = attack_samples,
                 .attack_step = attack_step,
-                .decay_time = decay_time,
+                .decay_time = config.decay_time,
                 .decay_samples = decay_samples,
                 .decay_step = decay_step,
-                .release_time = release_time,
+                .release_time = config.release_time,
                 .release_samples = release_samples,
                 .release_step = release_step,
-                .amplitude_start = amplitude_start,
-                .amplitude_max = amplitude_max,
-                .amplitude_sustain = amplitude_sustain,
-                .amplitude_end = amplitude_end,
-                .current_output = amplitude_start,
+                .amplitude_start = if (config.attack_time == 0) config.amplitude_max else config.amplitude_start,
+                .amplitude_max = config.amplitude_max,
+                .amplitude_sustain = config.amplitude_sustain,
+                .amplitude_end = config.amplitude_end,
+                .current_output = config.amplitude_start,
             };
         }
 
@@ -112,17 +113,17 @@ pub const Snd = struct {
                 self.current_output += self.attack_step;
                 self.attack_samples -= 1;
             } else if (self.decay_samples > 0) {
-                self.current_output -= self.decay_step;
+                self.current_output += self.decay_step;
                 self.decay_samples -= 1;
                 // TODO: implement sustain
             } else if (self.release_samples > 0) {
-                self.current_output -= self.release_step;
+                self.current_output += self.release_step;
                 self.release_samples -= 1;
             } else {
                 self.current_output = self.amplitude_end;
             }
 
-            return self.current_output;
+            return std.math.clamp(self.current_output, 0, 1);
         }
     };
 
@@ -145,7 +146,7 @@ pub const Snd = struct {
 
     pub fn init(allocator: std.mem.Allocator) !void {
         oscillators = std.ArrayList(Oscillator).init(allocator);
-        envelope = Envelope.init(0.05, 0.2, 0.2, 0, 0.4, 0.5, 0);
+        envelope = Envelope.init(.{});
         frequencies = generateFrequencies();
 
         raylib.InitAudioDevice();
