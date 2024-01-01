@@ -36,6 +36,7 @@ pub const Engine = struct {
 
     var timer: f32 = 0;
     var note: usize = 0;
+    var note2: usize = 107;
 
     pub fn init() !void {
         raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
@@ -89,6 +90,7 @@ pub const Engine = struct {
 
         try snd.init(allocator);
         try snd.addOscilator(.c_flat_2);
+        try snd.addOscilator(.c_flat_8);
     }
 
     pub fn update(dt: f32) !void {
@@ -144,8 +146,10 @@ pub const Engine = struct {
 
         if (timer > 0.1) {
             timer = 0;
-            snd.getOscillator(0).frequency = snd.notes.get(@enumFromInt(note));
+            snd.getOscillator(0).frequency = snd.frequencies.get(@enumFromInt(note));
+            snd.getOscillator(1).frequency = snd.frequencies.get(@enumFromInt(note2));
             note += 1;
+            note2 -= 1;
         }
     }
 
