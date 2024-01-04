@@ -10,11 +10,10 @@ const t = @import("utils/types.zig");
 pub const Context = struct {
     const Self = @This();
 
-    canvas: *Canvas,
     viewport: *Viewport,
 
     pub fn drawPixel(self: *Self, pos: raylib.Vector2, color: raylib.Color) void {
-        self.viewport.putPixelInView(self.canvas, pos, color);
+        self.viewport.putPixelInView(pos, color);
     }
 
     pub fn drawSprite(self: *Self, pos: raylib.Vector2, sprite: *const bmp.Bitmap) void {
@@ -36,29 +35,28 @@ pub const Context = struct {
     }
 };
 
-pub const Canvas = struct {
-    const Self = @This();
+pub const canvas = struct {
+    // TODO: depub this
+    pub const width: i32 = config.canvas_width;
+    pub const height: i32 = config.canvas_height;
+    pub var pixels: [config.canvas_width * config.canvas_height]raylib.Color = undefined;
 
-    width: i32,
-    height: i32,
-    pixels: [config.canvas_width * config.canvas_height]raylib.Color,
-
-    pub fn putPixelOnCanvas(self: *Self, x: i32, y: i32, color: raylib.Color) void {
-        const index = @as(usize, @intCast(self.width * y + x));
-        self.pixels[index] = color;
+    pub fn putPixelOnCanvas(x: i32, y: i32, color: raylib.Color) void {
+        const index = @as(usize, @intCast(width * y + x));
+        pixels[index] = color;
     }
 
-    pub fn clear(self: *Self, color: raylib.Color) void {
-        for (&self.pixels) |*pixel| {
+    pub fn clear(color: raylib.Color) void {
+        for (&pixels) |*pixel| {
             pixel.* = color;
         }
     }
 
-    pub fn getImage(self: *Self) raylib.Image {
+    pub fn getImage() raylib.Image {
         return .{
-            .data = &self.pixels,
-            .width = self.width,
-            .height = self.height,
+            .data = &pixels,
+            .width = width,
+            .height = height,
             .format = @intFromEnum(raylib.PixelFormat.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8),
             .mipmaps = 1,
         };
@@ -72,7 +70,6 @@ pub const Viewport = struct {
 
     pub fn putPixelInView(
         self: *const Self,
-        canvas: *Canvas,
         pixel_pos: raylib.Vector2,
         color: raylib.Color,
     ) void {

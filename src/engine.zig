@@ -18,10 +18,9 @@ const allocator = gpa.allocator();
 
 // NOTE: I think I don't have to instantiate these at all, just
 // importing these structs at the top level of this file should suffice
-var canvas: gfx.Canvas = undefined;
+const canvas = gfx.canvas;
 var viewport: gfx.Viewport = undefined;
 var context: gfx.Context = .{
-    .canvas = &canvas,
     .viewport = &viewport,
 };
 
@@ -66,11 +65,7 @@ pub fn init() !void {
     var pcg = std.rand.Pcg.init(@bitCast(std.time.timestamp()));
     random = pcg.random();
 
-    canvas = gfx.Canvas{
-        .width = config.canvas_width,
-        .height = config.canvas_height,
-        .pixels = [_]raylib.Color{raylib.RAYWHITE} ** (config.canvas_width * config.canvas_height),
-    };
+    canvas.pixels = [_]raylib.Color{raylib.RAYWHITE} ** (config.canvas_width * config.canvas_height);
 
     try assets.init(allocator, &[_][]const u8{ "test2.bmp", "sprite.bmp" });
 
@@ -114,7 +109,7 @@ pub fn update(dt: f32) !void {
     if (raylib.IsKeyDown(.KEY_W)) viewport.move(dir.up);
     if (raylib.IsKeyDown(.KEY_S)) viewport.move(dir.down);
 
-    context.canvas.clear(raylib.RAYWHITE);
+    canvas.clear(raylib.RAYWHITE);
 
     context.drawSprite(.{ .x = 0, .y = 0 }, &assets.bitmaps.get("test2").?);
 
