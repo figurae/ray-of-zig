@@ -33,10 +33,23 @@ pub const canvas = struct {
     pub const width: i32 = config.canvas_width;
     pub const height: i32 = config.canvas_height;
     pub var pixels: [width * height]raylib.Color = undefined;
+    pub var texture: raylib.Texture2D = undefined;
 
-    fn putPixelOnCanvas(x: i32, y: i32, color: raylib.Color) void {
-        const index = @as(usize, @intCast(width * y + x));
-        pixels[index] = color;
+    pub fn init() void {
+        clear(raylib.RAYWHITE);
+
+        const image = .{
+            .data = &pixels,
+            .width = width,
+            .height = height,
+            .format = @intFromEnum(raylib.PixelFormat.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8),
+            .mipmaps = 1,
+        };
+        texture = raylib.LoadTextureFromImage(image);
+    }
+
+    pub fn deinit() void {
+        raylib.UnloadTexture(texture);
     }
 
     pub fn clear(color: raylib.Color) void {
@@ -46,13 +59,12 @@ pub const canvas = struct {
     }
 
     pub fn getImage() raylib.Image {
-        return .{
-            .data = &pixels,
-            .width = width,
-            .height = height,
-            .format = @intFromEnum(raylib.PixelFormat.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8),
-            .mipmaps = 1,
-        };
+        return .{};
+    }
+
+    fn putPixelOnCanvas(x: i32, y: i32, color: raylib.Color) void {
+        const index = @as(usize, @intCast(width * y + x));
+        pixels[index] = color;
     }
 };
 

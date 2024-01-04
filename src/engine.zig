@@ -7,7 +7,7 @@ const snd = @import("snd.zig").Snd;
 const bmp = @import("bmp.zig");
 const fun = @import("fun.zig");
 const primitives = @import("primitives.zig");
-const assets = @import("assets.zig").Assets;
+const assets = @import("assets.zig");
 
 const m = @import("utils/math.zig");
 const t = @import("utils/types.zig");
@@ -18,9 +18,6 @@ const allocator = gpa.allocator();
 
 const canvas = gfx.canvas;
 const viewport = gfx.viewport;
-
-var image: raylib.Image = undefined;
-var texture: raylib.Texture2D = undefined;
 
 var dancing_lines: [10]fun.DancingLine = undefined;
 
@@ -60,18 +57,15 @@ pub fn init() !void {
     var pcg = std.rand.Pcg.init(@bitCast(std.time.timestamp()));
     random = pcg.random();
 
-    canvas.clear(raylib.RAYWHITE);
+    canvas.init();
 
     try assets.init(allocator, &[_][]const u8{ "test2.bmp", "sprite.bmp" });
-
-    image = canvas.getImage();
-    texture = raylib.LoadTextureFromImage(image);
 
     for (&dancing_lines) |*line| {
         line.* = fun.DancingLine.init(&random, null, null, null, null, null);
     }
 
-    raylib.SetTextureFilter(texture, @intFromEnum(raylib.TextureFilter.TEXTURE_FILTER_POINT));
+    raylib.SetTextureFilter(canvas.texture, @intFromEnum(raylib.TextureFilter.TEXTURE_FILTER_POINT));
 
     try snd.init(allocator);
     try snd.addOscilator(@enumFromInt(note - note_step));
@@ -120,8 +114,8 @@ pub fn update(dt: f32) !void {
         );
     }
 
-    raylib.UpdateTexture(texture, &canvas.pixels);
-    raylib.DrawTextureEx(texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
+    raylib.UpdateTexture(canvas.texture, &canvas.pixels);
+    raylib.DrawTextureEx(canvas.texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
 
     raylib.DrawFPS(10, 10);
 
@@ -137,7 +131,7 @@ pub fn update(dt: f32) !void {
 }
 
 pub fn deinit() void {
-    raylib.UnloadTexture(texture);
+    canvas.deinit();
     assets.deinit(allocator);
 
     snd.deinit();
