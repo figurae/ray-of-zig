@@ -3,7 +3,7 @@ const raylib = @import("raylib");
 
 const config = @import("config.zig");
 const gfx = @import("gfx.zig");
-const snd = @import("snd.zig").Snd;
+const snd = @import("snd.zig");
 const bmp = @import("bmp.zig");
 const fun = @import("fun.zig");
 const primitives = @import("primitives.zig");
