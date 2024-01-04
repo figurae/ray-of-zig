@@ -7,33 +7,27 @@ const bmp = @import("bmp.zig");
 const m = @import("utils/math.zig");
 const t = @import("utils/types.zig");
 
-pub const Context = struct {
-    const Self = @This();
+pub fn drawPixel(pos: raylib.Vector2, color: raylib.Color) void {
+    viewport.putPixelInView(pos, color);
+}
 
-    viewport: *Viewport,
-
-    pub fn drawPixel(self: *Self, pos: raylib.Vector2, color: raylib.Color) void {
-        self.viewport.putPixelInView(pos, color);
-    }
-
-    pub fn drawSprite(self: *Self, pos: raylib.Vector2, sprite: *const bmp.Bitmap) void {
-        for (sprite.pixels, 0..) |pixel, i| {
-            const i_i32: i32 = @intCast(i);
-            const y = @divFloor(i_i32, sprite.width);
-            const x = @rem(i_i32, sprite.width);
-            // TODO: handle alpha blending
-            if (pixel.a == 255) {
-                self.drawPixel(
-                    .{
-                        .x = t.f32FromInt(x) + pos.x,
-                        .y = t.f32FromInt(y) + pos.y,
-                    },
-                    pixel,
-                );
-            }
+pub fn drawSprite(pos: raylib.Vector2, sprite: *const bmp.Bitmap) void {
+    for (sprite.pixels, 0..) |pixel, i| {
+        const i_i32: i32 = @intCast(i);
+        const y = @divFloor(i_i32, sprite.width);
+        const x = @rem(i_i32, sprite.width);
+        // TODO: handle alpha blending
+        if (pixel.a == 255) {
+            drawPixel(
+                .{
+                    .x = t.f32FromInt(x) + pos.x,
+                    .y = t.f32FromInt(y) + pos.y,
+                },
+                pixel,
+            );
         }
     }
-};
+}
 
 pub const canvas = struct {
     // TODO: depub this
@@ -63,17 +57,15 @@ pub const canvas = struct {
     }
 };
 
-pub const Viewport = struct {
-    const Self = @This();
-
-    pos: raylib.Vector2,
+pub const viewport = struct {
+    // TODO: depub this
+    pub var pos = raylib.Vector2{ .x = 0, .y = 0 };
 
     pub fn putPixelInView(
-        self: *const Self,
         pixel_pos: raylib.Vector2,
         color: raylib.Color,
     ) void {
-        const pos_on_canvas = raylib.Vector2Subtract(pixel_pos, self.pos);
+        const pos_on_canvas = raylib.Vector2Subtract(pixel_pos, pos);
         const x_on_canvas = t.i32FromFloat(@round(pos_on_canvas.x));
         const y_on_canvas = t.i32FromFloat(@round(pos_on_canvas.y));
 
@@ -87,8 +79,8 @@ pub const Viewport = struct {
         }
     }
 
-    pub fn move(self: *Self, dir: raylib.Vector2) void {
-        self.pos = raylib.Vector2Add(self.pos, dir);
+    pub fn move(dir: raylib.Vector2) void {
+        pos = raylib.Vector2Add(pos, dir);
     }
 };
 

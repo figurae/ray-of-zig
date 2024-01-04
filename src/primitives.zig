@@ -2,12 +2,11 @@ const std = @import("std");
 const raylib = @import("raylib");
 
 const config = @import("config.zig");
-const Context = @import("gfx.zig").Context;
+const gfx = @import("gfx.zig");
 
 const t = @import("utils/types.zig");
 
 pub fn drawLine(
-    context: *Context,
     from: raylib.Vector2,
     to: raylib.Vector2,
     color: raylib.Color,
@@ -17,22 +16,21 @@ pub fn drawLine(
 
     if (@abs(rise) < @abs(run)) {
         if (from.x > to.x) {
-            drawLineLow(context, to, from, color);
+            drawLineLow(to, from, color);
         } else {
-            drawLineLow(context, from, to, color);
+            drawLineLow(from, to, color);
         }
     } else {
         if (from.y > to.y) {
-            drawLineHigh(context, to, from, color);
+            drawLineHigh(to, from, color);
         } else {
-            drawLineHigh(context, from, to, color);
+            drawLineHigh(from, to, color);
         }
     }
 }
 
 // NOTE: this should be possible to simplify into a single function
 fn drawLineLow(
-    context: *Context,
     from: raylib.Vector2,
     to: raylib.Vector2,
     color: raylib.Color,
@@ -56,7 +54,7 @@ fn drawLineLow(
     for (t.usizeFromFloat(from_x)..(t.usizeFromFloat(to_x) + 1)) |int_x| {
         const x = t.f32FromInt(int_x);
 
-        context.drawPixel(.{ .x = x, .y = y }, color);
+        gfx.drawPixel(.{ .x = x, .y = y }, color);
 
         if (difference > 0) {
             y += y_dir;
@@ -68,7 +66,6 @@ fn drawLineLow(
 }
 
 fn drawLineHigh(
-    context: *Context,
     from: raylib.Vector2,
     to: raylib.Vector2,
     color: raylib.Color,
@@ -92,7 +89,7 @@ fn drawLineHigh(
     for (t.usizeFromFloat(from_y)..(t.usizeFromFloat(to_y) + 1)) |int_y| {
         const y = t.f32FromInt(int_y);
 
-        context.drawPixel(.{ .x = x, .y = y }, color);
+        gfx.drawPixel(.{ .x = x, .y = y }, color);
 
         if (difference > 0) {
             x += x_dir;

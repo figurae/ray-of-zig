@@ -16,13 +16,8 @@ var random: std.rand.Random = undefined;
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 const allocator = gpa.allocator();
 
-// NOTE: I think I don't have to instantiate these at all, just
-// importing these structs at the top level of this file should suffice
 const canvas = gfx.canvas;
-var viewport: gfx.Viewport = undefined;
-var context: gfx.Context = .{
-    .viewport = &viewport,
-};
+const viewport = gfx.viewport;
 
 var image: raylib.Image = undefined;
 var texture: raylib.Texture2D = undefined;
@@ -69,10 +64,6 @@ pub fn init() !void {
 
     try assets.init(allocator, &[_][]const u8{ "test2.bmp", "sprite.bmp" });
 
-    viewport = gfx.Viewport{
-        .pos = raylib.Vector2{ .x = 0, .y = 0 },
-    };
-
     image = canvas.getImage();
     texture = raylib.LoadTextureFromImage(image);
 
@@ -111,19 +102,18 @@ pub fn update(dt: f32) !void {
 
     canvas.clear(raylib.RAYWHITE);
 
-    context.drawSprite(.{ .x = 0, .y = 0 }, &assets.bitmaps.get("test2").?);
+    gfx.drawSprite(.{ .x = 0, .y = 0 }, &assets.bitmaps.get("test2").?);
 
     if (raylib.IsKeyDown(.KEY_RIGHT)) sprite_x += 1;
     if (raylib.IsKeyDown(.KEY_LEFT)) sprite_x -= 1;
     if (raylib.IsKeyDown(.KEY_UP)) sprite_y -= 1;
     if (raylib.IsKeyDown(.KEY_DOWN)) sprite_y += 1;
 
-    context.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &assets.bitmaps.get("sprite").?);
+    gfx.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &assets.bitmaps.get("sprite").?);
 
     for (&dancing_lines) |*line| {
         line.update(dt);
         primitives.drawLine(
-            &context,
             line.pos_1,
             line.pos_2,
             line.color,
