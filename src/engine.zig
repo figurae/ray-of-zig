@@ -51,7 +51,7 @@ pub fn init() !void {
         @divTrunc(monitor_height - window_resolution.height, 2),
     );
 
-    const target_fps = raylib.GetMonitorRefreshRate(raylib.GetCurrentMonitor());
+    const target_fps = raylib.GetMonitorRefreshRate(monitor);
     raylib.SetTargetFPS(target_fps);
 
     var pcg = std.rand.Pcg.init(@bitCast(std.time.timestamp()));
