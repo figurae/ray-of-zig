@@ -30,12 +30,11 @@ pub fn drawSprite(pos: raylib.Vector2, sprite: *const bmp.Bitmap) void {
 }
 
 pub const canvas = struct {
-    // TODO: depub this
     pub const width: i32 = config.canvas_width;
     pub const height: i32 = config.canvas_height;
-    pub var pixels: [config.canvas_width * config.canvas_height]raylib.Color = undefined;
+    pub var pixels: [width * height]raylib.Color = undefined;
 
-    pub fn putPixelOnCanvas(x: i32, y: i32, color: raylib.Color) void {
+    fn putPixelOnCanvas(x: i32, y: i32, color: raylib.Color) void {
         const index = @as(usize, @intCast(width * y + x));
         pixels[index] = color;
     }
@@ -58,10 +57,13 @@ pub const canvas = struct {
 };
 
 pub const viewport = struct {
-    // TODO: depub this
-    pub var pos = raylib.Vector2{ .x = 0, .y = 0 };
+    var pos = raylib.Vector2{ .x = 0, .y = 0 };
 
-    pub fn putPixelInView(
+    pub fn move(dir: raylib.Vector2) void {
+        pos = raylib.Vector2Add(pos, dir);
+    }
+
+    fn putPixelInView(
         pixel_pos: raylib.Vector2,
         color: raylib.Color,
     ) void {
@@ -77,10 +79,6 @@ pub const viewport = struct {
         )) {
             canvas.putPixelOnCanvas(x_on_canvas, y_on_canvas, color);
         }
-    }
-
-    pub fn move(dir: raylib.Vector2) void {
-        pos = raylib.Vector2Add(pos, dir);
     }
 };
 

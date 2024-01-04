@@ -60,7 +60,7 @@ pub fn init() !void {
     var pcg = std.rand.Pcg.init(@bitCast(std.time.timestamp()));
     random = pcg.random();
 
-    canvas.pixels = [_]raylib.Color{raylib.RAYWHITE} ** (config.canvas_width * config.canvas_height);
+    canvas.clear(raylib.RAYWHITE);
 
     try assets.init(allocator, &[_][]const u8{ "test2.bmp", "sprite.bmp" });
 
