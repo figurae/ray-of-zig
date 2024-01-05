@@ -72,8 +72,6 @@ pub fn update(dt: f32) !void {
         );
     }
 
-    raylib.DrawFPS(10, 10);
-
     timer += dt;
 
     if (timer > 0.3) {

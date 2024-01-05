@@ -3,6 +3,7 @@ const scene_index = @import("scenes/index.zig");
 
 const SceneName = enum {
     test_scene,
+    snek,
 };
 
 const Scene = struct {
