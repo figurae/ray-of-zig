@@ -8,25 +8,16 @@ const bmp = @import("bmp.zig");
 const fun = @import("fun.zig");
 const primitives = @import("primitives.zig");
 const assets = @import("assets.zig");
+const scene_manager = @import("scene_manager.zig");
 
 const m = @import("utils/math.zig");
 const t = @import("utils/types.zig");
 
-var random: std.rand.Random = undefined;
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 const allocator = gpa.allocator();
 
 const canvas = gfx.canvas;
 const viewport = gfx.viewport;
-
-var dancing_lines: [10]fun.DancingLine = undefined;
-
-var sprite_x: f32 = 0;
-var sprite_y: f32 = 0;
-
-var timer: f32 = 0;
-var note: i32 = 42;
-var note_step: i32 = 3;
 
 pub fn init() !void {
     raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
@@ -54,21 +45,10 @@ pub fn init() !void {
     const target_fps = raylib.GetMonitorRefreshRate(monitor);
     raylib.SetTargetFPS(target_fps);
 
-    var pcg = std.rand.Pcg.init(@bitCast(std.time.timestamp()));
-    random = pcg.random();
-
     canvas.init();
-
-    try assets.init(allocator, &[_][]const u8{ "test2.bmp", "sprite.bmp" });
-
-    for (&dancing_lines) |*line| {
-        line.* = fun.DancingLine.init(&random, null, null, null, null, null);
-    }
-
     raylib.SetTextureFilter(canvas.texture, @intFromEnum(raylib.TextureFilter.TEXTURE_FILTER_POINT));
 
-    try snd.init(allocator);
-    try snd.addOscilator(@enumFromInt(note - note_step));
+    try scene_manager.init(allocator, .test_scene);
 }
 
 pub fn update(dt: f32) !void {
@@ -87,54 +67,14 @@ pub fn update(dt: f32) !void {
     raylib.BeginDrawing();
     defer raylib.EndDrawing();
 
-    const dir = m.Vector2Direction;
-
-    if (raylib.IsKeyDown(.KEY_D)) viewport.move(dir.right);
-    if (raylib.IsKeyDown(.KEY_A)) viewport.move(dir.left);
-    if (raylib.IsKeyDown(.KEY_W)) viewport.move(dir.up);
-    if (raylib.IsKeyDown(.KEY_S)) viewport.move(dir.down);
-
-    canvas.clear(raylib.RAYWHITE);
-
-    gfx.drawSprite(.{ .x = 0, .y = 0 }, &assets.bitmaps.get("test2").?);
-
-    if (raylib.IsKeyDown(.KEY_RIGHT)) sprite_x += 1;
-    if (raylib.IsKeyDown(.KEY_LEFT)) sprite_x -= 1;
-    if (raylib.IsKeyDown(.KEY_UP)) sprite_y -= 1;
-    if (raylib.IsKeyDown(.KEY_DOWN)) sprite_y += 1;
-
-    gfx.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &assets.bitmaps.get("sprite").?);
-
-    for (&dancing_lines) |*line| {
-        line.update(dt);
-        primitives.drawLine(
-            line.pos_1,
-            line.pos_2,
-            line.color,
-        );
-    }
+    try scene_manager.update(dt);
 
     raylib.UpdateTexture(canvas.texture, &canvas.pixels);
     raylib.DrawTextureEx(canvas.texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
-
-    raylib.DrawFPS(10, 10);
-
-    timer += dt;
-
-    if (timer > 0.3) {
-        timer = 0;
-        snd.getOscillator(0).play(@enumFromInt(note));
-
-        if (note > 70 or note < 32) note_step = -note_step;
-        note += note_step;
-    }
 }
 
 pub fn deinit() void {
+    scene_manager.deinit(allocator);
     canvas.deinit();
-    assets.deinit(allocator);
-
-    snd.deinit();
-
     raylib.CloseWindow();
 }
