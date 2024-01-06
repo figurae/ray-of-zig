@@ -115,15 +115,15 @@ const Envelope = struct {
     const Self = @This();
 
     attack_time: f32,
-    attack_samples: f32,
+    attack_sample_count: f32,
     attack_step: f32,
 
     decay_time: f32,
-    decay_samples: f32,
+    decay_sample_count: f32,
     decay_step: f32,
 
     release_time: f32,
-    release_samples: f32,
+    release_sample_count: f32,
     release_step: f32,
 
     amplitude_start: f32,
@@ -144,22 +144,22 @@ const Envelope = struct {
     };
 
     fn init(config: Config) Self {
-        const attack_samples = calculateSamples(config.attack_time);
-        const attack_step = 1 / attack_samples * (config.amplitude_max - config.amplitude_start);
-        const decay_samples = calculateSamples(config.decay_time);
-        const decay_step = 1 / decay_samples * (config.amplitude_sustain - config.amplitude_max);
-        const release_samples = calculateSamples(config.release_time);
-        const release_step = 1 / release_samples * (config.amplitude_end - config.amplitude_sustain);
+        const attack_sample_count = calculateSamples(config.attack_time);
+        const attack_step = 1 / attack_sample_count * (config.amplitude_max - config.amplitude_start);
+        const decay_sample_count = calculateSamples(config.decay_time);
+        const decay_step = 1 / decay_sample_count * (config.amplitude_sustain - config.amplitude_max);
+        const release_sample_count = calculateSamples(config.release_time);
+        const release_step = 1 / release_sample_count * (config.amplitude_end - config.amplitude_sustain);
 
         return .{
             .attack_time = config.attack_time,
-            .attack_samples = attack_samples,
+            .attack_sample_count = attack_sample_count,
             .attack_step = attack_step,
             .decay_time = config.decay_time,
-            .decay_samples = decay_samples,
+            .decay_sample_count = decay_sample_count,
             .decay_step = decay_step,
             .release_time = config.release_time,
-            .release_samples = release_samples,
+            .release_sample_count = release_sample_count,
             .release_step = release_step,
             .amplitude_start = config.amplitude_start,
             .amplitude_max = config.amplitude_max,
@@ -170,23 +170,23 @@ const Envelope = struct {
     }
 
     fn reset(self: *Self) void {
-        self.attack_samples = calculateSamples(self.attack_time);
-        self.decay_samples = calculateSamples(self.decay_time);
-        self.release_samples = calculateSamples(self.release_time);
+        self.attack_sample_count = calculateSamples(self.attack_time);
+        self.decay_sample_count = calculateSamples(self.decay_time);
+        self.release_sample_count = calculateSamples(self.release_time);
         self.current_output = self.amplitude_start;
     }
 
     fn next(self: *Self) f32 {
-        if (self.attack_samples > 0) {
+        if (self.attack_sample_count > 0) {
             self.current_output += self.attack_step;
-            self.attack_samples -= 1;
-        } else if (self.decay_samples > 0) {
+            self.attack_sample_count -= 1;
+        } else if (self.decay_sample_count > 0) {
             self.current_output += self.decay_step;
-            self.decay_samples -= 1;
+            self.decay_sample_count -= 1;
             // TODO: implement sustain
-        } else if (self.release_samples > 0) {
+        } else if (self.release_sample_count > 0) {
             self.current_output += self.release_step;
-            self.release_samples -= 1;
+            self.release_sample_count -= 1;
         } else {
             self.current_output = self.amplitude_end;
         }
