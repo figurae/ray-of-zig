@@ -8,7 +8,8 @@ pub fn init(allocator: std.mem.Allocator, bitmap_filenames: []const []const u8) 
     for (bitmap_filenames) |filename| {
         var basename_iter = std.mem.splitSequence(u8, filename, ".");
         const basename = basename_iter.first();
-        try bitmaps.put(basename, try bmp.getPixelsFromBmp(allocator, filename));
+        const file_path = try std.mem.join(allocator, "/", &[_][]const u8{ "assets", filename });
+        try bitmaps.put(basename, try bmp.getPixelsFromBmp(allocator, file_path));
     }
 }
 

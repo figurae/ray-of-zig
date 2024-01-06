@@ -26,7 +26,7 @@ var note: i32 = 42;
 var note_step: i32 = 3;
 
 pub fn init(allocator: std.mem.Allocator) !void {
-    try assets.init(allocator, &[_][]const u8{ "test2.bmp", "sprite.bmp" });
+    try assets.init(allocator, &[_][]const u8{ "test2.bmp", "sprite.bmp", "font4x7.bmp" });
 
     var pcg = std.rand.Pcg.init(@bitCast(std.time.timestamp()));
     random = pcg.random();

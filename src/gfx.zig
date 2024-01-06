@@ -94,6 +94,41 @@ pub const viewport = struct {
     }
 };
 
+fn drawGlyph(
+    pos: raylib.Vector2,
+    font_sheet: *const bmp.Bitmap,
+    glyph_index: usize,
+    glyph_width: usize,
+    glyph_height: usize,
+    glyph_padding: usize, // assumes identical padding on all sides
+    glyphs_per_line: usize,
+) void {
+    const sheet_width = @as(usize, @intCast(font_sheet.width));
+    const vertical_index = @divTrunc(glyph_index, glyphs_per_line);
+    const horizontal_index = @mod(glyph_index, glyphs_per_line);
+
+    const pixel_index_base = vertical_index * sheet_width * (glyph_height + glyph_padding);
+    const pixel_range_base = pixel_index_base + horizontal_index * (glyph_width + 1) + glyph_padding;
+
+    for (0..glyph_height) |y| {
+        const pixel_range_start = pixel_range_base + sheet_width * (y + glyph_padding);
+        const pixel_range_end = pixel_range_start + glyph_width;
+
+        for (font_sheet.pixels[pixel_range_start..pixel_range_end], 0..) |pixel, x| {
+            // TODO: handle alpha blending
+            if (pixel.a == 255) {
+                drawPixel(
+                    .{
+                        .x = t.f32FromInt(x) + pos.x,
+                        .y = t.f32FromInt(y) + pos.y,
+                    },
+                    pixel,
+                );
+            }
+        }
+    }
+}
+
 fn isPixelOutOfBounds(x: i32, y: i32, width: i32, height: i32) bool {
     return x < 0 or y < 0 or x >= width or y >= height;
 }
