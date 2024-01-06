@@ -87,10 +87,6 @@ pub const canvas = struct {
         }
     }
 
-    pub fn getImage() raylib.Image {
-        return .{};
-    }
-
     fn putPixelOnCanvas(x: i32, y: i32, color: raylib.Color) void {
         const index = @as(usize, @intCast(width * y + x));
         pixels[index] = color;
