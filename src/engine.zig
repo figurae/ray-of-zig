@@ -41,7 +41,7 @@ pub fn init() !void {
     canvas.init();
     raylib.SetTextureFilter(canvas.texture, @intFromEnum(raylib.TextureFilter.TEXTURE_FILTER_POINT));
 
-    try scene_manager.init(allocator, .test_scene);
+    try scene_manager.init(allocator, .snek);
 }
 
 pub fn update(dt: f32) !void {

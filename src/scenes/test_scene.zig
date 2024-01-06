@@ -26,7 +26,7 @@ var timer: f32 = 0;
 var note: i32 = 42;
 var note_step: i32 = 3;
 
-var is_overlay_visible = false;
+var is_overlay_visible = true;
 
 pub fn init(allocator: std.mem.Allocator) !void {
     try assets.init(allocator, &[_][]const u8{

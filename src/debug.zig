@@ -59,7 +59,7 @@ fn writeToBuffer(
     buffer: *[character_count]u8,
     index: *usize,
 ) void {
-    var buf: [text.len]u8 = undefined;
+    var buf: [character_count]u8 = undefined;
     const formatted_text = std.fmt.bufPrint(&buf, text, args) catch "<text formatting error>";
 
     for (formatted_text) |char| {
