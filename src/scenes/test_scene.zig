@@ -7,6 +7,7 @@ const gfx = @import("../gfx.zig");
 const snd = @import("../snd.zig");
 const shapes = @import("../shapes.zig");
 const assets = @import("../assets.zig");
+const debug = @import("../debug.zig");
 
 const m = @import("../utils/math.zig");
 
@@ -41,6 +42,30 @@ pub fn init(allocator: std.mem.Allocator) !void {
 
     try snd.init(allocator);
     try snd.addOscilator(@enumFromInt(note - note_step));
+
+    debug.print("1. test\n");
+    debug.print("2. test2\n");
+    debug.print("3. The quick brown fox jumps over the lazy dog.\n");
+    debug.print("4. The quick brown fox jumps over the lazy dog. ");
+    debug.print("5. The quick brown fox jumps over the lazy dog. ");
+    debug.print("6. The quick brown fox jumps over the lazy dog. ");
+    debug.print("7. The quick brown fox jumps over the lazy dog. ");
+    debug.print("8. The quick brown fox jumps over the lazy dog. ");
+    debug.print("9. The quick brown fox jumps over the lazy dog. ");
+    debug.print("10. The quick brown fox jumps over the lazy dog. ");
+    debug.print("11. The quick brown fox jumps over the lazy dog. ");
+    debug.print("12. The quick brown fox jumps over the lazy dog. ");
+    debug.print("13. The quick brown fox jumps over the lazy dog. ");
+    debug.print("14. The quick brown fox jumps over the lazy dog. ");
+    debug.print("15. The quick brown fox jumps over the lazy dog. ");
+    debug.print("16. The quick brown fox jumps over the lazy dog. ");
+    debug.print("17. The quick brown fox jumps over the lazy dog. ");
+    debug.print("18. The quick brown fox jumps over the lazy dog. ");
+    debug.print("19. The quick brown fox jumps over the lazy dog. ");
+    debug.print("20. The quick brown fox jumps over the lazy dog. ");
+    debug.print("21. The quick brown fox jumps over the lazy dog. ");
+    debug.print("22. ajajajaj, aj aj amr\n");
+    debug.print("23. aj mi korenoooo");
 }
 
 pub fn deinit(allocator: std.mem.Allocator) void {
@@ -67,13 +92,6 @@ pub fn update(dt: f32) !void {
 
     gfx.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &assets.bitmaps.get("sprite").?);
 
-    gfx.drawText(
-        "Hooray for spaces!!11",
-        .{ .x = 10, .y = 10 },
-        &assets.bitmaps.get("font4x7").?,
-        raylib.RED,
-    );
-
     for (&dancing_lines) |*line| {
         line.update(dt);
         shapes.drawLine(
@@ -82,6 +100,8 @@ pub fn update(dt: f32) !void {
             line.color,
         );
     }
+
+    debug.displayLog();
 
     timer += dt;
 
