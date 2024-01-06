@@ -133,7 +133,7 @@ const Envelope = struct {
 
     current_output: f32,
 
-    const Config = struct {
+    const EnvConfig = struct {
         attack_time: f32 = 0.001,
         decay_time: f32 = 0.15,
         release_time: f32 = 0.2,
@@ -143,7 +143,7 @@ const Envelope = struct {
         amplitude_end: f32 = 0,
     };
 
-    fn init(env_config: Config) Self {
+    fn init(env_config: EnvConfig) Self {
         const attack_sample_count = calculateSamples(env_config.attack_time);
         const attack_step = 1 / attack_sample_count * (env_config.amplitude_max - env_config.amplitude_start);
         const decay_sample_count = calculateSamples(env_config.decay_time);
