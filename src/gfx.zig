@@ -141,6 +141,9 @@ fn drawGlyph(
         const pixel_range_start = pixel_range_base + sheet_width * (y + glyph_padding);
         const pixel_range_end = pixel_range_start + glyph_width;
 
+        // TODO: handle additional characters
+        if (pixel_range_start >= font_sheet.pixels.len) continue;
+
         for (font_sheet.pixels[pixel_range_start..pixel_range_end], 0..) |pixel, x| {
             // TODO: handle alpha blending
             if (pixel.a == 255) {

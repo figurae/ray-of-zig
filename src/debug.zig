@@ -36,8 +36,11 @@ var log_index: usize = 0;
 var overlay_buffer = [_]u8{32} ** character_count;
 var overlay_index: usize = 0;
 
-pub fn print(text: []const u8) void {
-    for (text) |char| {
+pub fn print(comptime text: []const u8, args: anytype) void {
+    var buf: [text.len]u8 = undefined;
+    const formatted_text = std.fmt.bufPrint(&buf, text, args) catch "<text formatting error>";
+
+    for (formatted_text) |char| {
         if (log_index >= character_count) {
             log_index = last_line_start;
             moveAllLinesUp();
@@ -82,6 +85,7 @@ fn findNextLineStart() usize {
     return last_line_start;
 }
 
+// NOTE: I think this could be avoided by using a better data structure
 fn moveAllLinesUp() void {
     for (log_buffer[0..last_line_start], log_buffer[col_count..character_count]) |*top_char, *bottom_char| {
         top_char.* = bottom_char.*;
