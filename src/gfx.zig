@@ -29,6 +29,21 @@ pub fn drawSprite(pos: raylib.Vector2, sprite: *const bmp.Bitmap) void {
     }
 }
 
+pub fn drawText(text: []const u8, pos: raylib.Vector2, font_sheet: *const bmp.Bitmap) void {
+    const char_offset = 33;
+    const glyph_width = 4;
+    const glyph_height = 7;
+    const glyph_padding = 1;
+    const glyphs_per_line = 30;
+
+    for (text, 0..) |char, x| {
+        const glyph_index = char - char_offset;
+        const char_pos = raylib.Vector2Add(pos, .{ .x = t.f32FromInt(x * (glyph_width + 1)), .y = 0 });
+
+        drawGlyph(char_pos, font_sheet, glyph_index, glyph_width, glyph_height, glyph_padding, glyphs_per_line);
+    }
+}
+
 pub const canvas = struct {
     pub const width: i32 = config.canvas_width;
     pub const height: i32 = config.canvas_height;
@@ -94,6 +109,7 @@ pub const viewport = struct {
     }
 };
 
+// TODO: test for padding != 1
 fn drawGlyph(
     pos: raylib.Vector2,
     font_sheet: *const bmp.Bitmap,

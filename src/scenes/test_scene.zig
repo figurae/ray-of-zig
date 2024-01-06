@@ -54,7 +54,7 @@ pub fn update(dt: f32) !void {
 
     canvas.clear(raylib.RAYWHITE);
 
-    gfx.drawSprite(.{ .x = 0, .y = 0 }, &assets.bitmaps.get("test2").?);
+    // gfx.drawSprite(.{ .x = 0, .y = 0 }, &assets.bitmaps.get("test2").?);
 
     if (raylib.IsKeyDown(.KEY_RIGHT)) sprite_x += 1;
     if (raylib.IsKeyDown(.KEY_LEFT)) sprite_x -= 1;
@@ -62,6 +62,8 @@ pub fn update(dt: f32) !void {
     if (raylib.IsKeyDown(.KEY_DOWN)) sprite_y += 1;
 
     gfx.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &assets.bitmaps.get("sprite").?);
+
+    gfx.drawText("Y_HALO_THAR._Need_to_implement_spaces...", .{ .x = 10, .y = 10 }, &assets.bitmaps.get("font4x7").?);
 
     for (&dancing_lines) |*line| {
         line.update(dt);
