@@ -3,21 +3,14 @@ const raylib = @import("raylib");
 
 const config = @import("config.zig");
 const gfx = @import("gfx.zig");
-const snd = @import("snd.zig");
-const bmp = @import("bmp.zig");
-const fun = @import("fun.zig");
-const primitives = @import("primitives.zig");
-const assets = @import("assets.zig");
 const scene_manager = @import("scene_manager.zig");
 
 const m = @import("utils/math.zig");
-const t = @import("utils/types.zig");
 
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 const allocator = gpa.allocator();
 
 const canvas = gfx.canvas;
-const viewport = gfx.viewport;
 
 pub fn init() !void {
     raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });

@@ -1,22 +1,22 @@
 const std = @import("std");
 const raylib = @import("raylib");
 
-// NOTE: why does this work? I thought this should give
-// an error because of importing files outside module path...
+// NOTE: why does '../' work now? I thought it should give
+// an error because of importing files outside module path
 const gfx = @import("../gfx.zig");
 const snd = @import("../snd.zig");
-const fun = @import("../fun.zig");
-const primitives = @import("../primitives.zig");
+const shapes = @import("../shapes.zig");
 const assets = @import("../assets.zig");
 
 const m = @import("../utils/math.zig");
 
+const DancingLine = @import("./test_scene/DancingLine.zig");
 const viewport = gfx.viewport;
 const canvas = gfx.canvas;
 
 var random: std.rand.Random = undefined;
 
-var dancing_lines: [10]fun.DancingLine = undefined;
+var dancing_lines: [10]DancingLine = undefined;
 
 var sprite_x: f32 = 0;
 var sprite_y: f32 = 0;
@@ -26,13 +26,17 @@ var note: i32 = 42;
 var note_step: i32 = 3;
 
 pub fn init(allocator: std.mem.Allocator) !void {
-    try assets.init(allocator, &[_][]const u8{ "test2.bmp", "sprite.bmp", "font4x7.bmp" });
+    try assets.init(allocator, &[_][]const u8{
+        "test2.bmp",
+        "sprite.bmp",
+        "font4x7.bmp",
+    });
 
     var pcg = std.rand.Pcg.init(@bitCast(std.time.timestamp()));
     random = pcg.random();
 
     for (&dancing_lines) |*line| {
-        line.* = fun.DancingLine.init(&random, null, null, null, null, null);
+        line.* = DancingLine.init(&random, null, null, null, null, null);
     }
 
     try snd.init(allocator);
@@ -72,7 +76,7 @@ pub fn update(dt: f32) !void {
 
     for (&dancing_lines) |*line| {
         line.update(dt);
-        primitives.drawLine(
+        shapes.drawLine(
             line.pos_1,
             line.pos_2,
             line.color,
