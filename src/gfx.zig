@@ -87,7 +87,7 @@ pub const canvas = struct {
         }
     }
 
-    fn putPixelOnCanvas(x: i32, y: i32, color: raylib.Color) void {
+    pub fn putPixelOnCanvas(x: i32, y: i32, color: raylib.Color) void {
         const index = @as(usize, @intCast(width * y + x));
         pixels[index] = color;
     }
@@ -147,11 +147,9 @@ fn drawGlyph(
         for (font_sheet.pixels[pixel_range_start..pixel_range_end], 0..) |pixel, x| {
             // TODO: handle alpha blending
             if (pixel.a == 255) {
-                drawPixel(
-                    .{
-                        .x = t.f32FromInt(x) + pos.x,
-                        .y = t.f32FromInt(y) + pos.y,
-                    },
+                canvas.putPixelOnCanvas(
+                    @intCast(x + t.usizeFromFloat(pos.x)),
+                    @intCast(y + t.usizeFromFloat(pos.y)),
                     color,
                 );
             }
