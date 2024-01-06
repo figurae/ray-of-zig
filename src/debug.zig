@@ -37,26 +37,48 @@ var overlay_buffer = [_]u8{32} ** character_count;
 var overlay_index: usize = 0;
 
 pub fn log(comptime text: []const u8, args: anytype) void {
+    writeToBuffer(text, args, &log_buffer, &log_index);
+}
+
+pub fn overlay(comptime text: []const u8, args: anytype) void {
+    writeToBuffer(text, args, &overlay_buffer, &overlay_index);
+}
+
+pub fn displayLog() void {
+    displayBuffer(&log_buffer);
+}
+
+pub fn displayOverlay(show_overlay: bool) void {
+    if (show_overlay) displayBuffer(&overlay_buffer);
+    clearBuffer(&overlay_buffer, &overlay_index);
+}
+
+fn writeToBuffer(
+    comptime text: []const u8,
+    args: anytype,
+    buffer: *[character_count]u8,
+    index: *usize,
+) void {
     var buf: [text.len]u8 = undefined;
     const formatted_text = std.fmt.bufPrint(&buf, text, args) catch "<text formatting error>";
 
     for (formatted_text) |char| {
-        if (log_index >= character_count) {
-            log_index = last_line_start;
-            moveAllLinesUp();
+        if (index.* >= character_count) {
+            index.* = last_line_start;
+            moveAllLinesUp(buffer);
         }
 
         if (char == '\n') {
-            log_index = findNextLineStart();
+            index.* = findNextLineStart(buffer, index.*);
             continue;
         }
 
-        log_buffer[log_index] = char;
-        log_index += 1;
+        buffer[index.*] = char;
+        index.* += 1;
     }
 }
 
-pub fn displayLog() void {
+fn displayBuffer(buffer: *[character_count]u8) void {
     for (0..row_count) |row| {
         const range_start = row * col_count;
         const range_end = range_start + col_count;
@@ -65,7 +87,7 @@ pub fn displayLog() void {
             row * (font_height + font_vertical_padding));
 
         gfx.drawText(
-            log_buffer[range_start..range_end],
+            buffer[range_start..range_end],
             .{ .x = t.f32FromInt(screen_horizontal_padding + extra_left_margin), .y = y },
             &assets.bitmaps.get("font4x7").?,
             raylib.RED,
@@ -73,24 +95,31 @@ pub fn displayLog() void {
     }
 }
 
-fn findNextLineStart() usize {
+fn clearBuffer(buffer: *[character_count]u8, index: *usize) void {
+    for (buffer) |*char| {
+        char.* = ' ';
+    }
+    index.* = 0;
+}
+
+fn findNextLineStart(buffer: *[character_count]u8, index: usize) usize {
     // NOTE: must we always start at 0?
     var i: usize = 0;
     while (i < character_count) : (i += col_count) {
-        if (i > log_index) return i;
+        if (i > index) return i;
     }
 
     // NOTE: maybe unify this with the one inside print()
-    moveAllLinesUp();
+    moveAllLinesUp(buffer);
     return last_line_start;
 }
 
 // NOTE: I think this could be avoided by using a better data structure
-fn moveAllLinesUp() void {
-    for (log_buffer[0..last_line_start], log_buffer[col_count..character_count]) |*top_char, *bottom_char| {
+fn moveAllLinesUp(buffer: *[character_count]u8) void {
+    for (buffer[0..last_line_start], buffer[col_count..character_count]) |*top_char, *bottom_char| {
         top_char.* = bottom_char.*;
     }
-    for (log_buffer[last_line_start..character_count]) |*char| {
+    for (buffer[last_line_start..character_count]) |*char| {
         char.* = ' ';
     }
 }

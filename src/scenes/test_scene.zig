@@ -26,6 +26,8 @@ var timer: f32 = 0;
 var note: i32 = 42;
 var note_step: i32 = 3;
 
+var is_overlay_visible = false;
+
 pub fn init(allocator: std.mem.Allocator) !void {
     try assets.init(allocator, &[_][]const u8{
         "test2.bmp",
@@ -81,7 +83,11 @@ pub fn update(dt: f32) !void {
         );
     }
 
+    debug.overlay("sprite_x: {d}\nsprite_y: {d}\n", .{ sprite_x, sprite_y });
+    debug.displayOverlay(is_overlay_visible);
+
     if (raylib.IsKeyDown(.KEY_GRAVE)) debug.displayLog();
+    if (raylib.IsKeyPressed(.KEY_Z)) is_overlay_visible = !is_overlay_visible;
 
     timer += dt;
 
