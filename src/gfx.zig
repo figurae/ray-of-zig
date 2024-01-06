@@ -29,7 +29,12 @@ pub fn drawSprite(pos: raylib.Vector2, sprite: *const bmp.Bitmap) void {
     }
 }
 
-pub fn drawText(text: []const u8, pos: raylib.Vector2, font_sheet: *const bmp.Bitmap) void {
+pub fn drawText(
+    text: []const u8,
+    pos: raylib.Vector2,
+    font_sheet: *const bmp.Bitmap,
+    color: raylib.Color,
+) void {
     const char_offset = 33;
     const glyph_width = 4;
     const glyph_height = 7;
@@ -40,7 +45,16 @@ pub fn drawText(text: []const u8, pos: raylib.Vector2, font_sheet: *const bmp.Bi
         const glyph_index = char - char_offset;
         const char_pos = raylib.Vector2Add(pos, .{ .x = t.f32FromInt(x * (glyph_width + 1)), .y = 0 });
 
-        drawGlyph(char_pos, font_sheet, glyph_index, glyph_width, glyph_height, glyph_padding, glyphs_per_line);
+        drawGlyph(
+            char_pos,
+            font_sheet,
+            glyph_index,
+            glyph_width,
+            glyph_height,
+            glyph_padding,
+            glyphs_per_line,
+            color,
+        );
     }
 }
 
@@ -118,6 +132,7 @@ fn drawGlyph(
     glyph_height: usize,
     glyph_padding: usize, // assumes identical padding on all sides
     glyphs_per_line: usize,
+    color: raylib.Color,
 ) void {
     const sheet_width = @as(usize, @intCast(font_sheet.width));
     const vertical_index = @divTrunc(glyph_index, glyphs_per_line);
@@ -138,7 +153,7 @@ fn drawGlyph(
                         .x = t.f32FromInt(x) + pos.x,
                         .y = t.f32FromInt(y) + pos.y,
                     },
-                    pixel,
+                    color,
                 );
             }
         }
