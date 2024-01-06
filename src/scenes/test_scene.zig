@@ -64,7 +64,7 @@ pub fn update(dt: f32) !void {
     gfx.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &assets.bitmaps.get("sprite").?);
 
     gfx.drawText(
-        "Y_HALO_THAR._Need_to_implement_spaces...",
+        "Hooray for spaces!!11",
         .{ .x = 10, .y = 10 },
         &assets.bitmaps.get("font4x7").?,
         raylib.RED,

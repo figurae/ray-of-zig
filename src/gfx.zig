@@ -35,11 +35,11 @@ pub fn drawText(
     font_sheet: *const bmp.Bitmap,
     color: raylib.Color,
 ) void {
-    const char_offset = 33;
+    const char_offset = 32;
     const glyph_width = 4;
     const glyph_height = 7;
     const glyph_padding = 1;
-    const glyphs_per_line = 30;
+    const glyphs_per_line = 31;
 
     for (text, 0..) |char, x| {
         const glyph_index = char - char_offset;
