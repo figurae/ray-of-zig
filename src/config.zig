@@ -4,3 +4,4 @@ pub const initial_window_width = 640;
 pub const initial_window_height = 360;
 pub const is_window_resizable = true;
 pub const window_title = "ray-of-zig";
+pub const assets_dir = "assets";
