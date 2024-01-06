@@ -43,9 +43,9 @@ pub fn init(allocator: std.mem.Allocator) !void {
     try snd.init(allocator);
     try snd.addOscilator(@enumFromInt(note - note_step));
 
-    debug.print("Here's some nice debug information!\n", .{});
-    debug.print("I can do newlines and overflow the screen!\n\n", .{});
-    debug.print("Starting note: {d}\n", .{note});
+    debug.log("Here's some nice debug information!\n", .{});
+    debug.log("I can do newlines and overflow the screen!\n\n", .{});
+    debug.log("Starting note: {d}\n", .{note});
 }
 
 pub fn deinit(allocator: std.mem.Allocator) void {

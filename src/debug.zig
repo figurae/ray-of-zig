@@ -36,7 +36,7 @@ var log_index: usize = 0;
 var overlay_buffer = [_]u8{32} ** character_count;
 var overlay_index: usize = 0;
 
-pub fn print(comptime text: []const u8, args: anytype) void {
+pub fn log(comptime text: []const u8, args: anytype) void {
     var buf: [text.len]u8 = undefined;
     const formatted_text = std.fmt.bufPrint(&buf, text, args) catch "<text formatting error>";
 
