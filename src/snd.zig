@@ -143,29 +143,29 @@ const Envelope = struct {
         amplitude_end: f32 = 0,
     };
 
-    fn init(config: Config) Self {
-        const attack_sample_count = calculateSamples(config.attack_time);
-        const attack_step = 1 / attack_sample_count * (config.amplitude_max - config.amplitude_start);
-        const decay_sample_count = calculateSamples(config.decay_time);
-        const decay_step = 1 / decay_sample_count * (config.amplitude_sustain - config.amplitude_max);
-        const release_sample_count = calculateSamples(config.release_time);
-        const release_step = 1 / release_sample_count * (config.amplitude_end - config.amplitude_sustain);
+    fn init(env_config: Config) Self {
+        const attack_sample_count = calculateSamples(env_config.attack_time);
+        const attack_step = 1 / attack_sample_count * (env_config.amplitude_max - env_config.amplitude_start);
+        const decay_sample_count = calculateSamples(env_config.decay_time);
+        const decay_step = 1 / decay_sample_count * (env_config.amplitude_sustain - env_config.amplitude_max);
+        const release_sample_count = calculateSamples(env_config.release_time);
+        const release_step = 1 / release_sample_count * (env_config.amplitude_end - env_config.amplitude_sustain);
 
         return .{
-            .attack_time = config.attack_time,
+            .attack_time = env_config.attack_time,
             .attack_sample_count = attack_sample_count,
             .attack_step = attack_step,
-            .decay_time = config.decay_time,
+            .decay_time = env_config.decay_time,
             .decay_sample_count = decay_sample_count,
             .decay_step = decay_step,
-            .release_time = config.release_time,
+            .release_time = env_config.release_time,
             .release_sample_count = release_sample_count,
             .release_step = release_step,
-            .amplitude_start = config.amplitude_start,
-            .amplitude_max = config.amplitude_max,
-            .amplitude_sustain = config.amplitude_sustain,
-            .amplitude_end = config.amplitude_end,
-            .current_output = config.amplitude_start,
+            .amplitude_start = env_config.amplitude_start,
+            .amplitude_max = env_config.amplitude_max,
+            .amplitude_sustain = env_config.amplitude_sustain,
+            .amplitude_end = env_config.amplitude_end,
+            .current_output = env_config.amplitude_start,
         };
     }
 
