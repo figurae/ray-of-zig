@@ -11,11 +11,28 @@ pub fn drawPixel(pos: raylib.Vector2, color: raylib.Color) void {
     viewport.putPixelInView(pos, color);
 }
 
-pub fn drawSprite(pos: raylib.Vector2, sprite: *const bmp.Bitmap) void {
+const DrawSpriteOptions = struct {
+    dir: m.Dir = .right,
+};
+
+pub fn drawSprite(
+    pos: raylib.Vector2,
+    sprite: *const bmp.Bitmap,
+    options: DrawSpriteOptions,
+) void {
     for (sprite.pixels, 0..) |pixel, i| {
-        const i_i32: i32 = @intCast(i);
-        const y = @divFloor(i_i32, sprite.width);
-        const x = @rem(i_i32, sprite.width);
+        const pixel_count: i32 = @intCast(sprite.pixels.len);
+
+        var i_i32: i32 = @intCast(i);
+        if (options.dir == .left or options.dir == .up)
+            i_i32 = pixel_count - i_i32 - 1;
+
+        var y = @divFloor(i_i32, sprite.width);
+        var x = @rem(i_i32, sprite.width);
+
+        if (options.dir == .down or options.dir == .up)
+            std.mem.swap(i32, &x, &y);
+
         // TODO: handle alpha blending
         if (pixel.a == 255) {
             drawPixel(

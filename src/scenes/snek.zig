@@ -10,18 +10,19 @@ const t = @import("../utils/types.zig");
 const m = @import("../utils/math.zig");
 
 const Segment = @import("snek/Segment.zig");
-const dir = m.Vector2Direction;
+const V2D = m.Vector2Dir;
 
 const segment_size = 10;
 
+// NOTE: an idea - metaball segments!
 var snek: std.ArrayList(Segment) = undefined;
 
 const initial_pos = raylib.Vector2{ .x = config.canvas_width / 2, .y = config.canvas_height / 2 };
-const initial_dir = dir.right;
+const initial_dir = .right;
 var prev_pos: raylib.Vector2 = undefined;
 
 var speed: f32 = 40;
-var player_dir: raylib.Vector2 = undefined;
+var player_dir: m.Dir = undefined;
 
 var is_overlay_visible = true;
 
@@ -29,6 +30,7 @@ pub fn init(allocator: std.mem.Allocator) !void {
     // TODO: allow adding assets outside init to let debug inject the font on its own
     try assets.init(allocator, &[_][]const u8{
         "font4x7.bmp",
+        "circle10x10.bmp",
     });
     snek = std.ArrayList(Segment).init(allocator);
     try appendToSnek(&snek, 8);
@@ -61,27 +63,19 @@ pub fn update(dt: f32) !void {
     }
 
     for (snek.items) |*seg| {
-        seg.*.vel = raylib.Vector2Scale(seg.dir, speed * dt);
+        seg.*.vel = raylib.Vector2Scale(V2D.get(seg.dir), speed * dt);
         seg.*.pos = raylib.Vector2Add(seg.pos, seg.vel);
 
-        drawSegment(seg.pos);
+        gfx.drawSprite(seg.pos, &assets.bitmaps.get("circle10x10").?, .{ .dir = seg.dir });
     }
 
-    if (raylib.IsKeyDown(.KEY_RIGHT)) player_dir = dir.right;
-    if (raylib.IsKeyDown(.KEY_LEFT)) player_dir = dir.left;
-    if (raylib.IsKeyDown(.KEY_UP)) player_dir = dir.up;
-    if (raylib.IsKeyDown(.KEY_DOWN)) player_dir = dir.down;
+    if (raylib.IsKeyDown(.KEY_RIGHT)) player_dir = .right;
+    if (raylib.IsKeyDown(.KEY_LEFT)) player_dir = .left;
+    if (raylib.IsKeyDown(.KEY_UP)) player_dir = .up;
+    if (raylib.IsKeyDown(.KEY_DOWN)) player_dir = .down;
 
     if (raylib.IsKeyPressed(.KEY_GRAVE)) is_overlay_visible = !is_overlay_visible;
     debug.displayOverlay(is_overlay_visible);
-}
-
-fn drawSegment(pos: raylib.Vector2) void {
-    for (0..segment_size) |x| {
-        for (0..segment_size) |y| {
-            gfx.drawPixel(raylib.Vector2Add(pos, .{ .x = t.f32FromInt(x), .y = t.f32FromInt(y) }), raylib.BEIGE);
-        }
-    }
 }
 
 fn appendToSnek(target_snek: *std.ArrayList(Segment), segment_count: usize) !void {

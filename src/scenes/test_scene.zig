@@ -56,23 +56,23 @@ pub fn deinit(allocator: std.mem.Allocator) void {
 }
 
 pub fn update(dt: f32) !void {
-    const dir = m.Vector2Direction;
+    const V2D = m.Vector2Dir;
 
-    if (raylib.IsKeyDown(.KEY_D)) viewport.move(dir.right);
-    if (raylib.IsKeyDown(.KEY_A)) viewport.move(dir.left);
-    if (raylib.IsKeyDown(.KEY_W)) viewport.move(dir.up);
-    if (raylib.IsKeyDown(.KEY_S)) viewport.move(dir.down);
+    if (raylib.IsKeyDown(.KEY_D)) viewport.move(V2D.get(.right));
+    if (raylib.IsKeyDown(.KEY_A)) viewport.move(V2D.get(.left));
+    if (raylib.IsKeyDown(.KEY_W)) viewport.move(V2D.get(.up));
+    if (raylib.IsKeyDown(.KEY_S)) viewport.move(V2D.get(.down));
 
     canvas.clear(raylib.RAYWHITE);
 
-    gfx.drawSprite(.{ .x = 0, .y = 0 }, &assets.bitmaps.get("test2").?);
+    gfx.drawSprite(.{ .x = 0, .y = 0 }, &assets.bitmaps.get("test2").?, .{});
 
     if (raylib.IsKeyDown(.KEY_RIGHT)) sprite_x += 1;
     if (raylib.IsKeyDown(.KEY_LEFT)) sprite_x -= 1;
     if (raylib.IsKeyDown(.KEY_UP)) sprite_y -= 1;
     if (raylib.IsKeyDown(.KEY_DOWN)) sprite_y += 1;
 
-    gfx.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &assets.bitmaps.get("sprite").?);
+    gfx.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &assets.bitmaps.get("sprite").?, .{});
 
     for (&dancing_lines) |*line| {
         line.update(dt);

@@ -41,9 +41,21 @@ pub fn getNextLargestScaledResolution(
     };
 }
 
-pub const Vector2Direction = struct {
-    pub const up: raylib.Vector2 = .{ .x = 0, .y = -1 };
-    pub const down: raylib.Vector2 = .{ .x = 0, .y = 1 };
-    pub const left: raylib.Vector2 = .{ .x = -1, .y = 0 };
-    pub const right: raylib.Vector2 = .{ .x = 1, .y = 0 };
+pub const Dir = enum {
+    up,
+    down,
+    left,
+    right,
 };
+
+pub const Vector2Dir = initializeVector2Dir();
+
+fn initializeVector2Dir() std.EnumArray(Dir, raylib.Vector2) {
+    var V2D = std.EnumArray(Dir, raylib.Vector2).initUndefined();
+    V2D.set(.up, raylib.Vector2{ .x = 0, .y = -1 });
+    V2D.set(.down, raylib.Vector2{ .x = 0, .y = 1 });
+    V2D.set(.left, raylib.Vector2{ .x = -1, .y = 0 });
+    V2D.set(.right, raylib.Vector2{ .x = 1, .y = 0 });
+
+    return V2D;
+}
