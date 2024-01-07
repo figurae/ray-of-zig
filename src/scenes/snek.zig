@@ -30,7 +30,9 @@ pub fn init(allocator: std.mem.Allocator) !void {
     // TODO: allow adding assets outside init to let debug inject the font on its own
     try assets.init(allocator, &[_][]const u8{
         "font4x7.bmp",
-        "circle10x10.bmp",
+        "snek_seg.bmp",
+        "snek_hed.bmp",
+        "snek_tal.bmp",
     });
     snek = std.ArrayList(Segment).init(allocator);
     try appendToSnek(&snek, 8);
@@ -62,11 +64,22 @@ pub fn update(dt: f32) !void {
         prev_pos = snek_hed.pos;
     }
 
-    for (snek.items) |*seg| {
-        seg.*.vel = raylib.Vector2Scale(V2D.get(seg.dir), speed * dt);
-        seg.*.pos = raylib.Vector2Add(seg.pos, seg.vel);
+    {
+        var i = snek.items.len;
+        while (i > 0) {
+            i -= 1;
+            var seg = &snek.items[i];
+            seg.vel = raylib.Vector2Scale(V2D.get(seg.dir), speed * dt);
+            seg.pos = raylib.Vector2Add(seg.pos, seg.vel);
 
-        gfx.drawSprite(seg.pos, &assets.bitmaps.get("circle10x10").?, .{ .dir = seg.dir });
+            const sprite_name = switch (seg.sprite) {
+                .seg => "snek_seg",
+                .hed => "snek_hed",
+                else => "snek_tal",
+            };
+
+            gfx.drawSprite(seg.pos, &assets.bitmaps.get(sprite_name).?, .{ .dir = seg.dir });
+        }
     }
 
     if (raylib.IsKeyDown(.KEY_RIGHT)) player_dir = .right;
@@ -80,7 +93,7 @@ pub fn update(dt: f32) !void {
 
 fn appendToSnek(target_snek: *std.ArrayList(Segment), segment_count: usize) !void {
     for (0..segment_count) |i| {
-        try target_snek.append(Segment.init(
+        var segment = Segment.init(
             raylib.Vector2Subtract(
                 initial_pos,
                 .{
@@ -90,7 +103,12 @@ fn appendToSnek(target_snek: *std.ArrayList(Segment), segment_count: usize) !voi
             ),
             .{ .x = 0, .y = 0 },
             initial_dir,
-        ));
+        );
+
+        if (i == 0) segment.setSprite(.hed);
+        if (i == segment_count - 1) segment.setSprite(.tal);
+
+        try target_snek.append(segment);
     }
 }
 
