@@ -13,8 +13,11 @@ const Segment = @import("snek/Segment.zig");
 const V2D = m.Vector2Dir;
 
 const segment_size = 10;
+const input_buffer_duration = 1;
+const input_buffer_size = 3;
 
 // NOTE: an idea - metaball segments!
+var input_buffer: std.ArrayList(m.Dir) = undefined;
 var snek: std.ArrayList(Segment) = undefined;
 
 const initial_pos = raylib.Vector2{ .x = config.canvas_width / 2, .y = config.canvas_height / 2 };
@@ -22,7 +25,7 @@ const initial_dir = .right;
 var prev_pos: raylib.Vector2 = undefined;
 
 var speed: f32 = 40;
-var player_dir: m.Dir = undefined;
+var counter: f32 = 0;
 
 var is_overlay_visible = true;
 
@@ -34,10 +37,13 @@ pub fn init(allocator: std.mem.Allocator) !void {
         "snek_hed.bmp",
         "snek_tal.bmp",
     });
+
+    input_buffer = std.ArrayList(m.Dir).init(allocator);
+    try input_buffer.append(initial_dir);
+
     snek = std.ArrayList(Segment).init(allocator);
     try appendToSnek(&snek, 8);
 
-    player_dir = initial_dir;
     prev_pos = initial_pos;
 }
 
@@ -47,6 +53,20 @@ pub fn deinit(_: std.mem.Allocator) void {
 
 pub fn update(dt: f32) !void {
     gfx.canvas.clear(raylib.DARKBLUE);
+
+    counter += dt;
+    debug.overlay("{d}\n", .{counter});
+
+    if (counter >= input_buffer_duration) {
+        for (0..input_buffer.items.len - 1) |_| {
+            _ = input_buffer.orderedRemove(0);
+        }
+        counter = 0;
+    }
+
+    for (input_buffer.items) |item| {
+        debug.overlay("{any}\n", .{item});
+    }
 
     var snek_hed = &snek.items[0];
     if (@abs(snek_hed.pos.x - prev_pos.x) >= segment_size or @abs(snek_hed.pos.y - prev_pos.y) >= segment_size) {
@@ -60,7 +80,7 @@ pub fn update(dt: f32) !void {
             snek.items[i].dir = snek.items[i - 1].dir;
         }
 
-        snek_hed.dir = player_dir;
+        snek_hed.dir = input_buffer.items[0];
         prev_pos = snek_hed.pos;
     }
 
@@ -82,10 +102,10 @@ pub fn update(dt: f32) !void {
         }
     }
 
-    if (raylib.IsKeyDown(.KEY_RIGHT)) player_dir = .right;
-    if (raylib.IsKeyDown(.KEY_LEFT)) player_dir = .left;
-    if (raylib.IsKeyDown(.KEY_UP)) player_dir = .up;
-    if (raylib.IsKeyDown(.KEY_DOWN)) player_dir = .down;
+    if (raylib.IsKeyPressed(.KEY_RIGHT)) try pushInputToBuffer(.right);
+    if (raylib.IsKeyPressed(.KEY_LEFT)) try pushInputToBuffer(.left);
+    if (raylib.IsKeyDown(.KEY_UP)) try pushInputToBuffer(.up);
+    if (raylib.IsKeyDown(.KEY_DOWN)) try pushInputToBuffer(.down);
 
     if (raylib.IsKeyPressed(.KEY_GRAVE)) is_overlay_visible = !is_overlay_visible;
     debug.displayOverlay(is_overlay_visible);
@@ -109,6 +129,13 @@ fn appendToSnek(target_snek: *std.ArrayList(Segment), segment_count: usize) !voi
         if (i == segment_count - 1) segment.setSprite(.tal);
 
         try target_snek.append(segment);
+    }
+}
+
+fn pushInputToBuffer(input: m.Dir) !void {
+    try input_buffer.append(input);
+    if (input_buffer.items.len > input_buffer_size) {
+        _ = input_buffer.orderedRemove(0);
     }
 }
 
