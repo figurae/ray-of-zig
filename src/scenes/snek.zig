@@ -13,7 +13,7 @@ const Segment = @import("snek/Segment.zig");
 const V2D = m.Vector2Dir;
 
 const segment_size = 10;
-const input_buffer_duration = 1;
+const input_buffer_duration = 0.2;
 const input_buffer_size = 3;
 
 // NOTE: an idea - metaball segments!
@@ -39,8 +39,6 @@ pub fn init(allocator: std.mem.Allocator) !void {
     });
 
     input_buffer = std.ArrayList(m.Dir).init(allocator);
-    try input_buffer.append(initial_dir);
-
     snek = std.ArrayList(Segment).init(allocator);
     try appendToSnek(&snek, 8);
 
@@ -58,8 +56,11 @@ pub fn update(dt: f32) !void {
     debug.overlay("{d}\n", .{counter});
 
     if (counter >= input_buffer_duration) {
-        for (0..input_buffer.items.len - 1) |_| {
-            _ = input_buffer.orderedRemove(0);
+        // NOTE: this could be a little more elegant
+        if (input_buffer.items.len > 0) {
+            for (0..input_buffer.items.len - 1) |_| {
+                _ = input_buffer.orderedRemove(0);
+            }
         }
         counter = 0;
     }
@@ -80,7 +81,7 @@ pub fn update(dt: f32) !void {
             snek.items[i].dir = snek.items[i - 1].dir;
         }
 
-        snek_hed.dir = input_buffer.items[0];
+        snek_hed.dir = if (input_buffer.items.len > 0) input_buffer.orderedRemove(0) else snek_hed.dir;
         prev_pos = snek_hed.pos;
     }
 
@@ -104,8 +105,8 @@ pub fn update(dt: f32) !void {
 
     if (raylib.IsKeyPressed(.KEY_RIGHT)) try pushInputToBuffer(.right);
     if (raylib.IsKeyPressed(.KEY_LEFT)) try pushInputToBuffer(.left);
-    if (raylib.IsKeyDown(.KEY_UP)) try pushInputToBuffer(.up);
-    if (raylib.IsKeyDown(.KEY_DOWN)) try pushInputToBuffer(.down);
+    if (raylib.IsKeyPressed(.KEY_UP)) try pushInputToBuffer(.up);
+    if (raylib.IsKeyPressed(.KEY_DOWN)) try pushInputToBuffer(.down);
 
     if (raylib.IsKeyPressed(.KEY_GRAVE)) is_overlay_visible = !is_overlay_visible;
     debug.displayOverlay(is_overlay_visible);
@@ -137,6 +138,8 @@ fn pushInputToBuffer(input: m.Dir) !void {
     if (input_buffer.items.len > input_buffer_size) {
         _ = input_buffer.orderedRemove(0);
     }
+
+    counter = 0;
 }
 
 fn roundToSegmentSize(val: f32) f32 {
