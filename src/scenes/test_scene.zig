@@ -1,5 +1,5 @@
 const std = @import("std");
-const raylib = @import("raylib");
+const r = @import("raylib");
 
 // NOTE: why does '../' work now? I thought it should give
 // an error because of importing files outside module path
@@ -58,19 +58,19 @@ pub fn deinit(allocator: std.mem.Allocator) void {
 pub fn update(dt: f32) !void {
     const V2D = m.Vector2Dir;
 
-    if (raylib.IsKeyDown(.KEY_D)) viewport.move(V2D.get(.right));
-    if (raylib.IsKeyDown(.KEY_A)) viewport.move(V2D.get(.left));
-    if (raylib.IsKeyDown(.KEY_W)) viewport.move(V2D.get(.up));
-    if (raylib.IsKeyDown(.KEY_S)) viewport.move(V2D.get(.down));
+    if (r.IsKeyDown(.KEY_D)) viewport.move(V2D.get(.right));
+    if (r.IsKeyDown(.KEY_A)) viewport.move(V2D.get(.left));
+    if (r.IsKeyDown(.KEY_W)) viewport.move(V2D.get(.up));
+    if (r.IsKeyDown(.KEY_S)) viewport.move(V2D.get(.down));
 
-    canvas.clear(raylib.RAYWHITE);
+    canvas.clear(r.RAYWHITE);
 
     gfx.drawSprite(.{ .x = 0, .y = 0 }, &assets.bitmaps.get("test2").?, .{});
 
-    if (raylib.IsKeyDown(.KEY_RIGHT)) sprite_x += 1;
-    if (raylib.IsKeyDown(.KEY_LEFT)) sprite_x -= 1;
-    if (raylib.IsKeyDown(.KEY_UP)) sprite_y -= 1;
-    if (raylib.IsKeyDown(.KEY_DOWN)) sprite_y += 1;
+    if (r.IsKeyDown(.KEY_RIGHT)) sprite_x += 1;
+    if (r.IsKeyDown(.KEY_LEFT)) sprite_x -= 1;
+    if (r.IsKeyDown(.KEY_UP)) sprite_y -= 1;
+    if (r.IsKeyDown(.KEY_DOWN)) sprite_y += 1;
 
     gfx.drawSprite(.{ .x = sprite_x, .y = sprite_y }, &assets.bitmaps.get("sprite").?, .{});
 
@@ -86,8 +86,8 @@ pub fn update(dt: f32) !void {
     debug.overlay("sprite_x: {d}\nsprite_y: {d}\n", .{ sprite_x, sprite_y });
     debug.displayOverlay(is_overlay_visible);
 
-    if (raylib.IsKeyDown(.KEY_GRAVE)) debug.displayLog();
-    if (raylib.IsKeyPressed(.KEY_Z)) is_overlay_visible = !is_overlay_visible;
+    if (r.IsKeyDown(.KEY_GRAVE)) debug.displayLog();
+    if (r.IsKeyPressed(.KEY_Z)) is_overlay_visible = !is_overlay_visible;
 
     timer += dt;
 

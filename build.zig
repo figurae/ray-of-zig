@@ -1,5 +1,5 @@
 const std = @import("std");
-const raylib = @import("raylib/build.zig");
+const r = @import("raylib/build.zig");
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
@@ -12,7 +12,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    raylib.addTo(b, exe, target, optimize, .{});
+    r.addTo(b, exe, target, optimize, .{});
 
     b.installArtifact(exe);
 

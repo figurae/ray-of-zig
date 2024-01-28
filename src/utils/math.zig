@@ -1,5 +1,5 @@
 const std = @import("std");
-const raylib = @import("raylib");
+const r = @import("raylib");
 
 const t = @import("./types.zig");
 
@@ -46,6 +46,7 @@ pub const Dir = enum {
     down,
     left,
     right,
+    idle,
 };
 
 // NOTE: this should be possible to do numerically
@@ -55,17 +56,19 @@ pub fn reverseDir(dir: Dir) Dir {
         .down => .up,
         .left => .right,
         .right => .left,
+        .idle => .idle,
     };
 }
 
 pub const Vector2Dir = initializeVector2Dir();
 
-fn initializeVector2Dir() std.EnumArray(Dir, raylib.Vector2) {
-    var V2D = std.EnumArray(Dir, raylib.Vector2).initUndefined();
-    V2D.set(.up, raylib.Vector2{ .x = 0, .y = -1 });
-    V2D.set(.down, raylib.Vector2{ .x = 0, .y = 1 });
-    V2D.set(.left, raylib.Vector2{ .x = -1, .y = 0 });
-    V2D.set(.right, raylib.Vector2{ .x = 1, .y = 0 });
+fn initializeVector2Dir() std.EnumArray(Dir, r.Vector2) {
+    var V2D = std.EnumArray(Dir, r.Vector2).initUndefined();
+    V2D.set(.up, r.Vector2{ .x = 0, .y = -1 });
+    V2D.set(.down, r.Vector2{ .x = 0, .y = 1 });
+    V2D.set(.left, r.Vector2{ .x = -1, .y = 0 });
+    V2D.set(.right, r.Vector2{ .x = 1, .y = 0 });
+    V2D.set(.idle, r.Vector2{ .x = 0, .y = 0 });
 
     return V2D;
 }

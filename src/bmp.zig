@@ -1,5 +1,5 @@
 const std = @import("std");
-const raylib = @import("raylib");
+const r = @import("raylib");
 
 const f = @import("utils/file.zig");
 
@@ -34,7 +34,7 @@ const DibHeader = packed struct {
 };
 
 // NOTE: it would be nice to have a deinit()
-pub const Bitmap = struct { width: i32, height: i32, pixels: []raylib.Color };
+pub const Bitmap = struct { width: i32, height: i32, pixels: []r.Color };
 
 pub fn getPixelsFromBmp(allocator: std.mem.Allocator, filename: []const u8) !Bitmap {
     const file = try std.fs.cwd().openFile(filename, .{});
@@ -57,7 +57,7 @@ pub fn getPixelsFromBmp(allocator: std.mem.Allocator, filename: []const u8) !Bit
 
     var colors = try readColors(allocator, reader, image_size);
 
-    const tmp: []raylib.Color = try allocator.alloc(raylib.Color, width);
+    const tmp: []r.Color = try allocator.alloc(r.Color, width);
     defer allocator.free(tmp);
 
     for (0..@as(usize, @divFloor(height, 2))) |i| {
@@ -81,13 +81,13 @@ pub fn getPixelsFromBmp(allocator: std.mem.Allocator, filename: []const u8) !Bit
     };
 }
 
-fn readColors(allocator: std.mem.Allocator, reader: anytype, size: usize) ![]raylib.Color {
+fn readColors(allocator: std.mem.Allocator, reader: anytype, size: usize) ![]r.Color {
     // NOTE: why is this const? it's mutated by the reader...
     const buffer = try allocator.alloc(u8, size);
     try reader.readNoEof(buffer);
 
     // same here...
-    const colors = std.mem.bytesAsSlice(raylib.Color, buffer);
+    const colors = std.mem.bytesAsSlice(r.Color, buffer);
     for (colors) |*color| {
         std.mem.swap(u8, &color.r, &color.b);
     }

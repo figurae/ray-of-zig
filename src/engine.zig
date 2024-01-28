@@ -1,5 +1,5 @@
 const std = @import("std");
-const raylib = @import("raylib");
+const r = @import("raylib");
 
 const config = @import("config.zig");
 const gfx = @import("gfx.zig");
@@ -13,12 +13,12 @@ const allocator = gpa.allocator();
 const canvas = gfx.canvas;
 
 pub fn init() !void {
-    raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
-    raylib.InitWindow(config.initial_window_width, config.initial_window_height, config.window_title);
+    r.SetConfigFlags(r.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = config.is_window_resizable });
+    r.InitWindow(config.initial_window_width, config.initial_window_height, config.window_title);
 
-    const monitor = raylib.GetCurrentMonitor();
-    const monitor_width = raylib.GetMonitorWidth(monitor);
-    const monitor_height = raylib.GetMonitorHeight(monitor);
+    const monitor = r.GetCurrentMonitor();
+    const monitor_width = r.GetMonitorWidth(monitor);
+    const monitor_height = r.GetMonitorHeight(monitor);
     const window_resolution = m.getNextLargestScaledResolution(
         .{
             .width = monitor_width,
@@ -29,17 +29,17 @@ pub fn init() !void {
             .height = config.canvas_height,
         },
     );
-    raylib.SetWindowSize(window_resolution.width, window_resolution.height);
-    raylib.SetWindowPosition(
+    r.SetWindowSize(window_resolution.width, window_resolution.height);
+    r.SetWindowPosition(
         @divTrunc(monitor_width - window_resolution.width, 2),
         @divTrunc(monitor_height - window_resolution.height, 2),
     );
 
-    const target_fps = raylib.GetMonitorRefreshRate(monitor);
-    raylib.SetTargetFPS(target_fps);
+    const target_fps = r.GetMonitorRefreshRate(monitor);
+    r.SetTargetFPS(target_fps);
 
     canvas.init();
-    raylib.SetTextureFilter(canvas.texture, @intFromEnum(raylib.TextureFilter.TEXTURE_FILTER_POINT));
+    r.SetTextureFilter(canvas.texture, @intFromEnum(r.TextureFilter.TEXTURE_FILTER_POINT));
 
     try scene_manager.init(allocator, .snek);
 }
@@ -52,22 +52,22 @@ pub fn update(dt: f32) !void {
             .height = canvas.height,
         },
         .{
-            .width = raylib.GetScreenWidth(),
-            .height = raylib.GetScreenHeight(),
+            .width = r.GetScreenWidth(),
+            .height = r.GetScreenHeight(),
         },
     );
 
-    raylib.BeginDrawing();
-    defer raylib.EndDrawing();
+    r.BeginDrawing();
+    defer r.EndDrawing();
 
     try scene_manager.update(dt);
 
-    raylib.UpdateTexture(canvas.texture, &canvas.pixels);
-    raylib.DrawTextureEx(canvas.texture, .{ .x = 0, .y = 0 }, 0, integer_scale, raylib.WHITE);
+    r.UpdateTexture(canvas.texture, &canvas.pixels);
+    r.DrawTextureEx(canvas.texture, .{ .x = 0, .y = 0 }, 0, integer_scale, r.WHITE);
 }
 
 pub fn deinit() void {
     scene_manager.deinit(allocator);
     canvas.deinit();
-    raylib.CloseWindow();
+    r.CloseWindow();
 }

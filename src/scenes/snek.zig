@@ -1,5 +1,5 @@
 const std = @import("std");
-const raylib = @import("raylib");
+const r = @import("raylib");
 
 const config = @import("../config.zig");
 const gfx = @import("../gfx.zig");
@@ -22,14 +22,15 @@ var input_buffer: std.ArrayList(m.Dir) = undefined;
 // NOTE: an idea - metaball segments!
 var snek: std.ArrayList(Segment) = undefined;
 
-const initial_pos = raylib.Vector2{
+const initial_pos = r.Vector2{
     .x = config.canvas_width / 2,
     .y = config.canvas_height / 2,
 };
 const initial_dir = .right;
-var prev_pos: raylib.Vector2 = undefined;
+var prev_pos: r.Vector2 = undefined;
+var apple_pos: r.Vector2 = undefined;
 
-var speed: f32 = 40;
+var speed: f32 = 80;
 var counter: f32 = 0;
 
 var is_overlay_visible = true;
@@ -41,11 +42,14 @@ pub fn init(allocator: std.mem.Allocator) !void {
         "snek_seg.bmp",
         "snek_hed.bmp",
         "snek_tal.bmp",
+        "apple.bmp",
     });
 
     input_buffer = std.ArrayList(m.Dir).init(allocator);
     snek = std.ArrayList(Segment).init(allocator);
     try initializeSnek(initial_segment_count);
+
+    spawnApple(.{ .x = 80, .y = 60 });
 
     prev_pos = initial_pos;
 }
@@ -56,14 +60,17 @@ pub fn deinit(_: std.mem.Allocator) void {
 }
 
 pub fn update(dt: f32) !void {
-    if (isColliding()) try reset();
+    if (r.IsKeyPressed(.KEY_RIGHT)) try pushInputToBuffer(.right);
+    if (r.IsKeyPressed(.KEY_LEFT)) try pushInputToBuffer(.left);
+    if (r.IsKeyPressed(.KEY_UP)) try pushInputToBuffer(.up);
+    if (r.IsKeyPressed(.KEY_DOWN)) try pushInputToBuffer(.down);
 
-    gfx.canvas.clear(raylib.DARKBLUE);
+    gfx.canvas.clear(r.DARKBLUE);
 
     counter += dt;
-    debug.overlay("{d}\n", .{counter});
 
-    debug.overlay("isColliding: {any}\n", .{isColliding()});
+    debug.overlay("isCollidingWithObstacle: {any}\n", .{isCollidingWithObstacle()});
+    debug.overlay("isCollidingWithApple: {any}\n", .{isCollidingWithApple()});
 
     if (counter >= input_buffer_duration) {
         // NOTE: this could be a little more elegant
@@ -90,20 +97,31 @@ pub fn update(dt: f32) !void {
 
         var i = snek.items.len - 1;
         while (i >= 1) : (i -= 1) {
-            snek.items[i].dir = snek.items[i - 1].dir;
+            if (snek.items[i].stop_count == 0) {
+                snek.items[i].dir = snek.items[i - 1].dir;
+            } else {
+                // FIXME: this is not working when the apple is eaten just after turning
+                snek.items[i].stop_count -= 1;
+            }
         }
 
         snek_hed.dir = readInputFromBuffer(snek_hed.dir);
         prev_pos = snek_hed.pos;
     }
 
+    gfx.drawSprite(
+        apple_pos,
+        &assets.bitmaps.get("apple").?,
+        .{},
+    );
+
     {
         var i = snek.items.len;
         while (i > 0) {
             i -= 1;
             var seg = &snek.items[i];
-            seg.vel = raylib.Vector2Scale(V2D.get(seg.dir), speed * dt);
-            seg.pos = raylib.Vector2Add(seg.pos, seg.vel);
+            seg.vel = r.Vector2Scale(V2D.get(seg.dir), speed * dt);
+            seg.pos = r.Vector2Add(seg.pos, seg.vel);
 
             const sprite_name = switch (seg.sprite) {
                 .seg => "snek_seg",
@@ -119,12 +137,10 @@ pub fn update(dt: f32) !void {
         }
     }
 
-    if (raylib.IsKeyPressed(.KEY_RIGHT)) try pushInputToBuffer(.right);
-    if (raylib.IsKeyPressed(.KEY_LEFT)) try pushInputToBuffer(.left);
-    if (raylib.IsKeyPressed(.KEY_UP)) try pushInputToBuffer(.up);
-    if (raylib.IsKeyPressed(.KEY_DOWN)) try pushInputToBuffer(.down);
+    if (isCollidingWithObstacle()) try reset();
+    if (isCollidingWithApple()) try growSnek();
 
-    if (raylib.IsKeyPressed(.KEY_GRAVE)) is_overlay_visible = !is_overlay_visible;
+    if (r.IsKeyPressed(.KEY_GRAVE)) is_overlay_visible = !is_overlay_visible;
     debug.displayOverlay(is_overlay_visible);
 }
 
@@ -132,7 +148,7 @@ fn reset() !void {
     try initializeSnek(initial_segment_count);
 }
 
-fn isColliding() bool {
+fn isCollidingWithObstacle() bool {
     const p = snek.items[0].getFrontCollisionPixel();
 
     for (snek.items[1..]) |seg| {
@@ -146,12 +162,27 @@ fn isColliding() bool {
     return false;
 }
 
+// NOTE: this can be definitely unified
+fn isCollidingWithApple() bool {
+    const p = snek.items[0].getFrontCollisionPixel();
+
+    if ((p.x >= apple_pos.x and p.x < apple_pos.x + segment_size) and
+        (p.y >= apple_pos.y and p.y < apple_pos.y + segment_size))
+    {
+        apple_pos.x = 200;
+        apple_pos.y = 120;
+        return true;
+    }
+
+    return false;
+}
+
 fn initializeSnek(segment_count: usize) !void {
     if (snek.items.len > 0) snek.clearAndFree();
 
     for (0..segment_count) |i| {
         var segment = Segment.init(
-            raylib.Vector2Subtract(
+            r.Vector2Subtract(
                 initial_pos,
                 .{
                     .x = t.f32FromInt(i) * segment_size,
@@ -161,6 +192,7 @@ fn initializeSnek(segment_count: usize) !void {
             .{ .x = 0, .y = 0 },
             initial_dir,
             segment_size,
+            0,
         );
 
         if (i == 0) segment.setSprite(.hed);
@@ -168,6 +200,20 @@ fn initializeSnek(segment_count: usize) !void {
 
         try snek.append(segment);
     }
+}
+
+fn growSnek() !void {
+    var last_seg = &snek.items[snek.items.len - 1];
+    var new_seg = Segment.init(last_seg.pos, r.Vector2Zero(), .idle, segment_size, 1);
+
+    new_seg.sprite = .tal;
+    last_seg.sprite = .seg;
+
+    try snek.append(new_seg);
+}
+
+fn spawnApple(pos: r.Vector2) void {
+    apple_pos = pos;
 }
 
 fn readInputFromBuffer(current_dir: m.Dir) m.Dir {

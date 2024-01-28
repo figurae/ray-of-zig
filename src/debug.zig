@@ -1,5 +1,5 @@
 const std = @import("std");
-const raylib = @import("raylib");
+const r = @import("raylib");
 
 const config = @import("config.zig");
 const gfx = @import("gfx.zig");
@@ -90,7 +90,7 @@ fn displayBuffer(buffer: *[character_count]u8) void {
             buffer[range_start..range_end],
             .{ .x = t.f32FromInt(screen_horizontal_padding + extra_left_margin), .y = y },
             &assets.bitmaps.get("font4x7").?,
-            raylib.RED,
+            r.RED,
         );
     }
 }

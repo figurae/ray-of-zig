@@ -1,5 +1,5 @@
 const std = @import("std");
-const raylib = @import("raylib");
+const r = @import("raylib");
 
 const a4_frequency = 440;
 
@@ -9,7 +9,7 @@ const max_samples_per_update: i32 = 4096;
 
 var frequencies: std.EnumArray(Note, f32) = undefined;
 var oscillators: std.ArrayList(Oscillator) = undefined;
-var stream: raylib.AudioStream = undefined;
+var stream: r.AudioStream = undefined;
 var envelope: Envelope = undefined;
 
 pub fn init(allocator: std.mem.Allocator) !void {
@@ -17,17 +17,17 @@ pub fn init(allocator: std.mem.Allocator) !void {
     envelope = Envelope.init(.{});
     frequencies = generateFrequencies();
 
-    raylib.InitAudioDevice();
+    r.InitAudioDevice();
 
-    raylib.SetAudioStreamBufferSizeDefault(max_samples_per_update);
-    stream = raylib.LoadAudioStream(@intFromFloat(sample_rate), 16, 1);
-    raylib.SetAudioStreamCallback(stream, audio_callback);
-    raylib.PlayAudioStream(stream);
+    r.SetAudioStreamBufferSizeDefault(max_samples_per_update);
+    stream = r.LoadAudioStream(@intFromFloat(sample_rate), 16, 1);
+    r.SetAudioStreamCallback(stream, audio_callback);
+    r.PlayAudioStream(stream);
 }
 
 pub fn deinit() void {
-    raylib.UnloadAudioStream(stream);
-    raylib.CloseAudioDevice();
+    r.UnloadAudioStream(stream);
+    r.CloseAudioDevice();
 
     oscillators.deinit();
 }

@@ -1,13 +1,13 @@
 const std = @import("std");
 
-const raylib = @import("raylib");
+const r = @import("raylib");
 const config = @import("config.zig");
 const bmp = @import("bmp.zig");
 
 const m = @import("utils/math.zig");
 const t = @import("utils/types.zig");
 
-pub fn drawPixel(pos: raylib.Vector2, color: raylib.Color) void {
+pub fn drawPixel(pos: r.Vector2, color: r.Color) void {
     viewport.putPixelInView(pos, color);
 }
 
@@ -16,7 +16,7 @@ const DrawSpriteOptions = struct {
 };
 
 pub fn drawSprite(
-    pos: raylib.Vector2,
+    pos: r.Vector2,
     sprite: *const bmp.Bitmap,
     options: DrawSpriteOptions,
 ) void {
@@ -48,9 +48,9 @@ pub fn drawSprite(
 
 pub fn drawText(
     text: []const u8,
-    pos: raylib.Vector2,
+    pos: r.Vector2,
     font_sheet: *const bmp.Bitmap,
-    color: raylib.Color,
+    color: r.Color,
 ) void {
     const char_offset = 32;
     const glyph_width = 4;
@@ -60,7 +60,7 @@ pub fn drawText(
 
     for (text, 0..) |char, x| {
         const glyph_index = char - char_offset;
-        const char_pos = raylib.Vector2Add(pos, .{ .x = t.f32FromInt(x * (glyph_width + 1)), .y = 0 });
+        const char_pos = r.Vector2Add(pos, .{ .x = t.f32FromInt(x * (glyph_width + 1)), .y = 0 });
 
         drawGlyph(
             char_pos,
@@ -78,50 +78,50 @@ pub fn drawText(
 pub const canvas = struct {
     pub const width: i32 = config.canvas_width;
     pub const height: i32 = config.canvas_height;
-    pub var pixels: [width * height]raylib.Color = undefined;
-    pub var texture: raylib.Texture2D = undefined;
+    pub var pixels: [width * height]r.Color = undefined;
+    pub var texture: r.Texture2D = undefined;
 
     pub fn init() void {
-        clear(raylib.RAYWHITE);
+        clear(r.RAYWHITE);
 
         const image = .{
             .data = &pixels,
             .width = width,
             .height = height,
-            .format = @intFromEnum(raylib.PixelFormat.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8),
+            .format = @intFromEnum(r.PixelFormat.PIXELFORMAT_UNCOMPRESSED_R8G8B8A8),
             .mipmaps = 1,
         };
-        texture = raylib.LoadTextureFromImage(image);
+        texture = r.LoadTextureFromImage(image);
     }
 
     pub fn deinit() void {
-        raylib.UnloadTexture(texture);
+        r.UnloadTexture(texture);
     }
 
-    pub fn clear(color: raylib.Color) void {
+    pub fn clear(color: r.Color) void {
         for (&pixels) |*pixel| {
             pixel.* = color;
         }
     }
 
-    pub fn putPixelOnCanvas(x: i32, y: i32, color: raylib.Color) void {
+    pub fn putPixelOnCanvas(x: i32, y: i32, color: r.Color) void {
         const index = @as(usize, @intCast(width * y + x));
         pixels[index] = color;
     }
 };
 
 pub const viewport = struct {
-    var pos = raylib.Vector2{ .x = 0, .y = 0 };
+    var pos = r.Vector2{ .x = 0, .y = 0 };
 
-    pub fn move(dir: raylib.Vector2) void {
-        pos = raylib.Vector2Add(pos, dir);
+    pub fn move(dir: r.Vector2) void {
+        pos = r.Vector2Add(pos, dir);
     }
 
     fn putPixelInView(
-        pixel_pos: raylib.Vector2,
-        color: raylib.Color,
+        pixel_pos: r.Vector2,
+        color: r.Color,
     ) void {
-        const pos_on_canvas = raylib.Vector2Subtract(pixel_pos, pos);
+        const pos_on_canvas = r.Vector2Subtract(pixel_pos, pos);
         const x_on_canvas = t.i32FromFloat(@round(pos_on_canvas.x));
         const y_on_canvas = t.i32FromFloat(@round(pos_on_canvas.y));
 
@@ -138,14 +138,14 @@ pub const viewport = struct {
 
 // TODO: test for padding != 1
 fn drawGlyph(
-    pos: raylib.Vector2,
+    pos: r.Vector2,
     font_sheet: *const bmp.Bitmap,
     glyph_index: usize,
     glyph_width: usize,
     glyph_height: usize,
     glyph_padding: usize, // assumes identical padding on all sides
     glyphs_per_line: usize,
-    color: raylib.Color,
+    color: r.Color,
 ) void {
     const sheet_width = @as(usize, @intCast(font_sheet.width));
     const vertical_index = @divTrunc(glyph_index, glyphs_per_line);

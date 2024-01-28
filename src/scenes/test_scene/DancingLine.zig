@@ -1,40 +1,40 @@
 const std = @import("std");
-const raylib = @import("raylib");
+const r = @import("raylib");
 const config = @import("../../config.zig");
 
 const Self = @This();
 
 const max_vel: f32 = 100;
 
-pos_1: raylib.Vector2,
-vel_1: raylib.Vector2,
+pos_1: r.Vector2,
+vel_1: r.Vector2,
 
-pos_2: raylib.Vector2,
-vel_2: raylib.Vector2,
+pos_2: r.Vector2,
+vel_2: r.Vector2,
 
-color: raylib.Color,
+color: r.Color,
 
 pub fn init(
     random: *std.rand.Random,
-    pos_1_arg: ?raylib.Vector2,
-    vel_1_arg: ?raylib.Vector2,
-    pos_2_arg: ?raylib.Vector2,
-    vel_2_arg: ?raylib.Vector2,
-    color_arg: ?raylib.Color,
+    pos_1_arg: ?r.Vector2,
+    vel_1_arg: ?r.Vector2,
+    pos_2_arg: ?r.Vector2,
+    vel_2_arg: ?r.Vector2,
+    color_arg: ?r.Color,
 ) Self {
-    const pos_1 = if (pos_1_arg) |pos| pos else raylib.Vector2{
+    const pos_1 = if (pos_1_arg) |pos| pos else r.Vector2{
         .x = random.float(f32) * (config.canvas_width - 1),
         .y = random.float(f32) * (config.canvas_height - 1),
     };
-    const vel_1 = if (vel_1_arg) |vel| vel else raylib.Vector2{
+    const vel_1 = if (vel_1_arg) |vel| vel else r.Vector2{
         .x = random.float(f32) * max_vel,
         .y = random.float(f32) * max_vel,
     };
-    const pos_2 = if (pos_2_arg) |pos| pos else raylib.Vector2{
+    const pos_2 = if (pos_2_arg) |pos| pos else r.Vector2{
         .x = random.float(f32) * (config.canvas_width - 1),
         .y = random.float(f32) * (config.canvas_height - 1),
     };
-    const vel_2 = if (vel_2_arg) |pos| pos else raylib.Vector2{
+    const vel_2 = if (vel_2_arg) |pos| pos else r.Vector2{
         .x = random.float(f32) * max_vel,
         .y = random.float(f32) * max_vel,
     };
@@ -81,7 +81,7 @@ pub fn update(self: *Self, dt: f32) void {
     self.pos_2.y = next_y_2;
 }
 
-fn getRandomColor(random: *std.rand.Random) raylib.Color {
+fn getRandomColor(random: *std.rand.Random) r.Color {
     return .{
         .r = random.int(u8),
         .g = random.int(u8),

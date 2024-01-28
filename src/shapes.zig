@@ -1,5 +1,5 @@
 const std = @import("std");
-const raylib = @import("raylib");
+const r = @import("raylib");
 
 const config = @import("config.zig");
 const gfx = @import("gfx.zig");
@@ -7,9 +7,9 @@ const gfx = @import("gfx.zig");
 const t = @import("utils/types.zig");
 
 pub fn drawLine(
-    from: raylib.Vector2,
-    to: raylib.Vector2,
-    color: raylib.Color,
+    from: r.Vector2,
+    to: r.Vector2,
+    color: r.Color,
 ) void {
     const run = to.x - from.x;
     const rise = to.y - from.y;
@@ -31,9 +31,9 @@ pub fn drawLine(
 
 // NOTE: this should be possible to simplify into a single function
 fn drawLineLow(
-    from: raylib.Vector2,
-    to: raylib.Vector2,
-    color: raylib.Color,
+    from: r.Vector2,
+    to: r.Vector2,
+    color: r.Color,
 ) void {
     var y_dir: f32 = 1;
     const run = to.x - from.x;
@@ -66,9 +66,9 @@ fn drawLineLow(
 }
 
 fn drawLineHigh(
-    from: raylib.Vector2,
-    to: raylib.Vector2,
-    color: raylib.Color,
+    from: r.Vector2,
+    to: r.Vector2,
+    color: r.Color,
 ) void {
     var x_dir: f32 = 1;
     var run = to.x - from.x;
