@@ -12,8 +12,15 @@ const m = @import("../utils/math.zig");
 const Segment = @import("snek/Segment.zig");
 const V2D = m.Vector2Dir;
 
+var pcg: std.rand.Pcg = undefined;
+var random: std.rand.Random = undefined;
+
 const segment_size = 10;
 const initial_segment_count = 8;
+const initial_speed = 40;
+// TODO: have to fix wobblyness before increasing this further
+const max_speed = 120;
+const speed_step = 5;
 const input_buffer_duration = 0.2;
 const input_buffer_size = 3;
 
@@ -30,7 +37,7 @@ const initial_dir = .right;
 var prev_pos: r.Vector2 = undefined;
 var apple_pos: r.Vector2 = undefined;
 
-var speed: f32 = 40;
+var speed: f32 = initial_speed;
 var counter: f32 = 0;
 var should_grow = false;
 
@@ -46,11 +53,16 @@ pub fn init(allocator: std.mem.Allocator) !void {
         "apple.bmp",
     });
 
+    var seed: u64 = undefined;
+    try std.os.getrandom(std.mem.asBytes(&seed));
+    pcg = std.rand.Pcg.init(seed);
+    random = pcg.random();
+
     input_buffer = std.ArrayList(m.Dir).init(allocator);
     snek = std.ArrayList(Segment).init(allocator);
     try initializeSnek(initial_segment_count);
 
-    spawnApple(.{ .x = 80, .y = 60 });
+    spawnApple(&random);
 
     prev_pos = initial_pos;
 }
@@ -70,8 +82,12 @@ pub fn update(dt: f32) !void {
 
     counter += dt;
 
-    debug.overlay("isCollidingWithObstacle: {any}\n", .{isCollidingWithObstacle()});
-    debug.overlay("isCollidingWithApple: {any}\n", .{isCollidingWithApple()});
+    // debug.overlay("isCollidingWithObstacle: {any}\n", .{isCollidingWithObstacle()});
+    // debug.overlay("isCollidingWithApple: {any}\n", .{isCollidingWithApple()});
+    // debug.overlay("should_grow: {any}\n", .{should_grow});
+    // debug.overlay("apple_pos.x: {d}\n", .{apple_pos.x});
+    // debug.overlay("apple_pos.y: {d}\n", .{apple_pos.y});
+    debug.overlay("speed: {d}\n", .{speed});
 
     if (counter >= input_buffer_duration) {
         // NOTE: this could be a little more elegant
@@ -108,7 +124,9 @@ pub fn update(dt: f32) !void {
         prev_pos = snek_hed.pos;
 
         if (should_grow) {
-            try grow_snek();
+            // FIXME: this happens at different times depending on
+            // whether the head turned just before eating the apple
+            try growSnek();
             should_grow = false;
         }
     }
@@ -144,7 +162,10 @@ pub fn update(dt: f32) !void {
     }
 
     if (isCollidingWithObstacle()) try reset();
-    if (isCollidingWithApple()) should_grow = true;
+    if (isCollidingWithApple()) {
+        should_grow = true;
+        spawnApple(&random);
+    }
 
     if (r.IsKeyPressed(.KEY_GRAVE)) is_overlay_visible = !is_overlay_visible;
     debug.displayOverlay(is_overlay_visible);
@@ -152,6 +173,7 @@ pub fn update(dt: f32) !void {
 
 fn reset() !void {
     try initializeSnek(initial_segment_count);
+    speed = initial_speed;
 }
 
 fn isCollidingWithObstacle() bool {
@@ -175,8 +197,6 @@ fn isCollidingWithApple() bool {
     if ((p.x >= apple_pos.x and p.x < apple_pos.x + segment_size) and
         (p.y >= apple_pos.y and p.y < apple_pos.y + segment_size))
     {
-        apple_pos.x = 200;
-        apple_pos.y = 120;
         return true;
     }
 
@@ -208,7 +228,7 @@ fn initializeSnek(segment_count: usize) !void {
     }
 }
 
-fn grow_snek() !void {
+fn growSnek() !void {
     var last_seg = &snek.items[snek.items.len - 1];
     var new_seg = Segment.init(last_seg.pos, r.Vector2Zero(), last_seg.dir, segment_size, true);
 
@@ -216,10 +236,43 @@ fn grow_snek() !void {
     last_seg.sprite = .seg;
 
     try snek.append(new_seg);
+    // NOTE: perhaps this should follow some kind of a curve
+    if (speed < max_speed) speed += speed_step;
 }
 
-fn spawnApple(pos: r.Vector2) void {
-    apple_pos = pos;
+fn spawnApple(rand: *std.rand.Random) void {
+    var rand_pos = getRandomPos(rand);
+    var found_target = false;
+
+    while (r.Vector2Equals(rand_pos, apple_pos) != 0) {
+        std.debug.print("got the same positions\n", .{});
+        rand_pos = getRandomPos(rand);
+    }
+
+    std.debug.print("generated pos x {d}\n", .{rand_pos.x});
+
+    while (!found_target) {
+        restart: for (snek.items) |seg| {
+            // TODO: factor out
+            if ((rand_pos.x >= seg.pos.x and rand_pos.x < seg.pos.x + segment_size) and
+                (rand_pos.y >= seg.pos.y and rand_pos.y < seg.pos.y + segment_size))
+            {
+                rand_pos = getRandomPos(rand);
+                std.debug.print("got x {d}, seg x {d}, restarting\n", .{ rand_pos.x, seg.pos.x });
+                break :restart;
+            }
+        }
+        found_target = true;
+    }
+
+    apple_pos = rand_pos;
+}
+
+fn getRandomPos(rand: *std.rand.Random) r.Vector2 {
+    return .{
+        .x = @round(rand.float(f32) * (@divTrunc(config.canvas_width, segment_size) - 1)) * segment_size,
+        .y = @round(rand.float(f32) * (@divTrunc(config.canvas_height, segment_size) - 1)) * segment_size,
+    };
 }
 
 fn readInputFromBuffer(current_dir: m.Dir) m.Dir {

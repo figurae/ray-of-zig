@@ -38,9 +38,9 @@ pub fn getFrontCollisionPixel(self: *Self) r.Vector2 {
     const halfSize = @divTrunc(self.size, 2);
 
     return switch (self.dir) {
-        .up => r.Vector2{ .x = self.pos.x + halfSize, .y = self.pos.y },
-        .down => r.Vector2{ .x = self.pos.x + halfSize, .y = self.pos.y + self.size },
-        .left => r.Vector2{ .x = self.pos.x, .y = self.pos.y + halfSize },
-        else => r.Vector2{ .x = self.pos.x + self.size, .y = self.pos.y + halfSize },
+        .up => r.Vector2{ .x = self.pos.x + halfSize, .y = self.pos.y + 1 },
+        .down => r.Vector2{ .x = self.pos.x + halfSize, .y = self.pos.y + self.size - 1 },
+        .left => r.Vector2{ .x = self.pos.x + 1, .y = self.pos.y + halfSize },
+        else => r.Vector2{ .x = self.pos.x + self.size - 1, .y = self.pos.y + halfSize },
     };
 }
