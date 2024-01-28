@@ -30,8 +30,9 @@ const initial_dir = .right;
 var prev_pos: r.Vector2 = undefined;
 var apple_pos: r.Vector2 = undefined;
 
-var speed: f32 = 80;
+var speed: f32 = 40;
 var counter: f32 = 0;
+var should_grow = false;
 
 var is_overlay_visible = true;
 
@@ -97,16 +98,19 @@ pub fn update(dt: f32) !void {
 
         var i = snek.items.len - 1;
         while (i >= 1) : (i -= 1) {
-            if (snek.items[i].stop_count == 0) {
-                snek.items[i].dir = snek.items[i - 1].dir;
-            } else {
-                // FIXME: this is not working when the apple is eaten just after turning
-                snek.items[i].stop_count -= 1;
-            }
+            snek.items[i].dir = snek.items[i - 1].dir;
         }
+
+        var last_seg = &snek.items[snek.items.len - 1];
+        if (last_seg.is_stopped) last_seg.is_stopped = false;
 
         snek_hed.dir = readInputFromBuffer(snek_hed.dir);
         prev_pos = snek_hed.pos;
+
+        if (should_grow) {
+            try grow_snek();
+            should_grow = false;
+        }
     }
 
     gfx.drawSprite(
@@ -120,8 +124,10 @@ pub fn update(dt: f32) !void {
         while (i > 0) {
             i -= 1;
             var seg = &snek.items[i];
-            seg.vel = r.Vector2Scale(V2D.get(seg.dir), speed * dt);
-            seg.pos = r.Vector2Add(seg.pos, seg.vel);
+            if (!seg.is_stopped) {
+                seg.vel = r.Vector2Scale(V2D.get(seg.dir), speed * dt);
+                seg.pos = r.Vector2Add(seg.pos, seg.vel);
+            }
 
             const sprite_name = switch (seg.sprite) {
                 .seg => "snek_seg",
@@ -138,7 +144,7 @@ pub fn update(dt: f32) !void {
     }
 
     if (isCollidingWithObstacle()) try reset();
-    if (isCollidingWithApple()) try growSnek();
+    if (isCollidingWithApple()) should_grow = true;
 
     if (r.IsKeyPressed(.KEY_GRAVE)) is_overlay_visible = !is_overlay_visible;
     debug.displayOverlay(is_overlay_visible);
@@ -192,7 +198,7 @@ fn initializeSnek(segment_count: usize) !void {
             .{ .x = 0, .y = 0 },
             initial_dir,
             segment_size,
-            0,
+            false,
         );
 
         if (i == 0) segment.setSprite(.hed);
@@ -202,9 +208,9 @@ fn initializeSnek(segment_count: usize) !void {
     }
 }
 
-fn growSnek() !void {
+fn grow_snek() !void {
     var last_seg = &snek.items[snek.items.len - 1];
-    var new_seg = Segment.init(last_seg.pos, r.Vector2Zero(), .idle, segment_size, 1);
+    var new_seg = Segment.init(last_seg.pos, r.Vector2Zero(), last_seg.dir, segment_size, true);
 
     new_seg.sprite = .tal;
     last_seg.sprite = .seg;

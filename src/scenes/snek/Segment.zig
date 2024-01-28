@@ -14,17 +14,17 @@ pos: r.Vector2,
 vel: r.Vector2,
 dir: m.Dir,
 size: f32,
-stop_count: usize,
+is_stopped: bool,
 sprite: Sprite,
 
 // NOTE: this looks like a candidate for a struct argument
-pub fn init(pos: r.Vector2, vel: r.Vector2, dir: m.Dir, size: f32, stop_count: usize) Self {
+pub fn init(pos: r.Vector2, vel: r.Vector2, dir: m.Dir, size: f32, is_stopped: bool) Self {
     return .{
         .pos = pos,
         .vel = vel,
         .dir = dir,
         .size = size,
-        .stop_count = stop_count,
+        .is_stopped = is_stopped,
         .sprite = .seg,
     };
 }
