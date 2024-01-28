@@ -15,12 +15,10 @@ const V2D = m.Vector2Dir;
 const segment_size = 10;
 const input_buffer_duration = 0.2;
 const input_buffer_size = 3;
-const collision_map_size = config.canvas_width / segment_size * config.canvas_height / segment_size;
 
 // NOTE: an idea - metaball segments!
 var input_buffer: std.ArrayList(m.Dir) = undefined;
 var snek: std.ArrayList(Segment) = undefined;
-var collision_map = [_]bool{false} ** collision_map_size;
 
 const initial_pos = raylib.Vector2{ .x = config.canvas_width / 2, .y = config.canvas_height / 2 };
 const initial_dir = .right;
@@ -58,6 +56,8 @@ pub fn update(dt: f32) !void {
     counter += dt;
     debug.overlay("{d}\n", .{counter});
 
+    debug.overlay("isColliding: {any}\n", .{isColliding()});
+
     if (counter >= input_buffer_duration) {
         // NOTE: this could be a little more elegant
         if (input_buffer.items.len > 0) {
@@ -84,7 +84,7 @@ pub fn update(dt: f32) !void {
             snek.items[i].dir = snek.items[i - 1].dir;
         }
 
-        snek_hed.dir = if (input_buffer.items.len > 0) input_buffer.orderedRemove(0) else snek_hed.dir;
+        snek_hed.dir = readInputFromBuffer(snek_hed.dir);
         prev_pos = snek_hed.pos;
     }
 
@@ -115,7 +115,18 @@ pub fn update(dt: f32) !void {
     debug.displayOverlay(is_overlay_visible);
 }
 
-fn isColliding() bool {}
+fn isColliding() bool {
+    const s = snek.items;
+    const p = s[0].getFrontCollisionPixel();
+    for (1..s.len) |i| {
+        if ((p.x >= s[i].pos.x and p.x < s[i].pos.x + segment_size) and
+            (p.y >= s[i].pos.y and p.y < s[i].pos.y + segment_size))
+        {
+            return true;
+        }
+    }
+    return false;
+}
 
 fn appendToSnek(target_snek: *std.ArrayList(Segment), segment_count: usize) !void {
     for (0..segment_count) |i| {
@@ -129,6 +140,7 @@ fn appendToSnek(target_snek: *std.ArrayList(Segment), segment_count: usize) !voi
             ),
             .{ .x = 0, .y = 0 },
             initial_dir,
+            segment_size,
         );
 
         if (i == 0) segment.setSprite(.hed);
@@ -138,9 +150,23 @@ fn appendToSnek(target_snek: *std.ArrayList(Segment), segment_count: usize) !voi
     }
 }
 
+fn readInputFromBuffer(current_dir: m.Dir) m.Dir {
+    for (input_buffer.items.len) |_| {
+        const new_dir = input_buffer.orderedRemove(0);
+        if (new_dir == m.reverseDir(current_dir)) continue else return new_dir;
+    }
+    return current_dir;
+}
+
 fn pushInputToBuffer(input: m.Dir) !void {
+    const last_input = input_buffer.getLastOrNull();
+    if (last_input == input) return;
+
+    const buffer_len = input_buffer.items.len;
+    if (buffer_len == 0 and input == m.reverseDir(snek.items[0].dir)) return;
+
     try input_buffer.append(input);
-    if (input_buffer.items.len > input_buffer_size) {
+    if (buffer_len > input_buffer_size) {
         _ = input_buffer.orderedRemove(0);
     }
 

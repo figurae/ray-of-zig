@@ -48,6 +48,16 @@ pub const Dir = enum {
     right,
 };
 
+// NOTE: this should be possible to do numerically
+pub fn reverseDir(dir: Dir) Dir {
+    return switch (dir) {
+        .up => .down,
+        .down => .up,
+        .left => .right,
+        .right => .left,
+    };
+}
+
 pub const Vector2Dir = initializeVector2Dir();
 
 fn initializeVector2Dir() std.EnumArray(Dir, raylib.Vector2) {
