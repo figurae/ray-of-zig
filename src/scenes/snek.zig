@@ -15,10 +15,12 @@ const V2D = m.Vector2Dir;
 const segment_size = 10;
 const input_buffer_duration = 0.2;
 const input_buffer_size = 3;
+const collision_map_size = config.canvas_width / segment_size * config.canvas_height / segment_size;
 
 // NOTE: an idea - metaball segments!
 var input_buffer: std.ArrayList(m.Dir) = undefined;
 var snek: std.ArrayList(Segment) = undefined;
+var collision_map = [_]bool{false} ** collision_map_size;
 
 const initial_pos = raylib.Vector2{ .x = config.canvas_width / 2, .y = config.canvas_height / 2 };
 const initial_dir = .right;
@@ -46,6 +48,7 @@ pub fn init(allocator: std.mem.Allocator) !void {
 }
 
 pub fn deinit(_: std.mem.Allocator) void {
+    input_buffer.deinit();
     snek.deinit();
 }
 
@@ -111,6 +114,8 @@ pub fn update(dt: f32) !void {
     if (raylib.IsKeyPressed(.KEY_GRAVE)) is_overlay_visible = !is_overlay_visible;
     debug.displayOverlay(is_overlay_visible);
 }
+
+fn isColliding() bool {}
 
 fn appendToSnek(target_snek: *std.ArrayList(Segment), segment_count: usize) !void {
     for (0..segment_count) |i| {
