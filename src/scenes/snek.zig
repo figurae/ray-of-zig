@@ -13,14 +13,19 @@ const Segment = @import("snek/Segment.zig");
 const V2D = m.Vector2Dir;
 
 const segment_size = 10;
+const initial_segment_count = 8;
 const input_buffer_duration = 0.2;
 const input_buffer_size = 3;
 
-// NOTE: an idea - metaball segments!
+// NOTE: this could be a custom stack implementation
 var input_buffer: std.ArrayList(m.Dir) = undefined;
+// NOTE: an idea - metaball segments!
 var snek: std.ArrayList(Segment) = undefined;
 
-const initial_pos = raylib.Vector2{ .x = config.canvas_width / 2, .y = config.canvas_height / 2 };
+const initial_pos = raylib.Vector2{
+    .x = config.canvas_width / 2,
+    .y = config.canvas_height / 2,
+};
 const initial_dir = .right;
 var prev_pos: raylib.Vector2 = undefined;
 
@@ -40,7 +45,7 @@ pub fn init(allocator: std.mem.Allocator) !void {
 
     input_buffer = std.ArrayList(m.Dir).init(allocator);
     snek = std.ArrayList(Segment).init(allocator);
-    try appendToSnek(&snek, 8);
+    try initializeSnek(initial_segment_count);
 
     prev_pos = initial_pos;
 }
@@ -51,6 +56,8 @@ pub fn deinit(_: std.mem.Allocator) void {
 }
 
 pub fn update(dt: f32) !void {
+    if (isColliding()) try reset();
+
     gfx.canvas.clear(raylib.DARKBLUE);
 
     counter += dt;
@@ -61,7 +68,7 @@ pub fn update(dt: f32) !void {
     if (counter >= input_buffer_duration) {
         // NOTE: this could be a little more elegant
         if (input_buffer.items.len > 0) {
-            for (0..input_buffer.items.len - 1) |_| {
+            for (input_buffer.items.len - 1) |_| {
                 _ = input_buffer.orderedRemove(0);
             }
         }
@@ -73,7 +80,9 @@ pub fn update(dt: f32) !void {
     }
 
     var snek_hed = &snek.items[0];
-    if (@abs(snek_hed.pos.x - prev_pos.x) >= segment_size or @abs(snek_hed.pos.y - prev_pos.y) >= segment_size) {
+    if (@abs(snek_hed.pos.x - prev_pos.x) >= segment_size or
+        @abs(snek_hed.pos.y - prev_pos.y) >= segment_size)
+    {
         for (snek.items) |*seg| {
             seg.pos.x = roundToSegmentSize(seg.pos.x);
             seg.pos.y = roundToSegmentSize(seg.pos.y);
@@ -102,7 +111,11 @@ pub fn update(dt: f32) !void {
                 else => "snek_tal",
             };
 
-            gfx.drawSprite(seg.pos, &assets.bitmaps.get(sprite_name).?, .{ .dir = seg.dir });
+            gfx.drawSprite(
+                seg.pos,
+                &assets.bitmaps.get(sprite_name).?,
+                .{ .dir = seg.dir },
+            );
         }
     }
 
@@ -115,20 +128,27 @@ pub fn update(dt: f32) !void {
     debug.displayOverlay(is_overlay_visible);
 }
 
+fn reset() !void {
+    try initializeSnek(initial_segment_count);
+}
+
 fn isColliding() bool {
-    const s = snek.items;
-    const p = s[0].getFrontCollisionPixel();
-    for (1..s.len) |i| {
-        if ((p.x >= s[i].pos.x and p.x < s[i].pos.x + segment_size) and
-            (p.y >= s[i].pos.y and p.y < s[i].pos.y + segment_size))
+    const p = snek.items[0].getFrontCollisionPixel();
+
+    for (snek.items[1..]) |seg| {
+        if ((p.x >= seg.pos.x and p.x < seg.pos.x + segment_size) and
+            (p.y >= seg.pos.y and p.y < seg.pos.y + segment_size))
         {
             return true;
         }
     }
+
     return false;
 }
 
-fn appendToSnek(target_snek: *std.ArrayList(Segment), segment_count: usize) !void {
+fn initializeSnek(segment_count: usize) !void {
+    if (snek.items.len > 0) snek.clearAndFree();
+
     for (0..segment_count) |i| {
         var segment = Segment.init(
             raylib.Vector2Subtract(
@@ -146,7 +166,7 @@ fn appendToSnek(target_snek: *std.ArrayList(Segment), segment_count: usize) !voi
         if (i == 0) segment.setSprite(.hed);
         if (i == segment_count - 1) segment.setSprite(.tal);
 
-        try target_snek.append(segment);
+        try snek.append(segment);
     }
 }
 
@@ -155,12 +175,12 @@ fn readInputFromBuffer(current_dir: m.Dir) m.Dir {
         const new_dir = input_buffer.orderedRemove(0);
         if (new_dir == m.reverseDir(current_dir)) continue else return new_dir;
     }
+
     return current_dir;
 }
 
 fn pushInputToBuffer(input: m.Dir) !void {
-    const last_input = input_buffer.getLastOrNull();
-    if (last_input == input) return;
+    if (input_buffer.getLastOrNull() == input) return;
 
     const buffer_len = input_buffer.items.len;
     if (buffer_len == 0 and input == m.reverseDir(snek.items[0].dir)) return;
