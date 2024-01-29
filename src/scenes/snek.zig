@@ -82,12 +82,8 @@ pub fn update(dt: f32) !void {
 
     counter += dt;
 
-    // debug.overlay("isCollidingWithObstacle: {any}\n", .{isCollidingWithObstacle()});
-    // debug.overlay("isCollidingWithApple: {any}\n", .{isCollidingWithApple()});
-    // debug.overlay("should_grow: {any}\n", .{should_grow});
-    // debug.overlay("apple_pos.x: {d}\n", .{apple_pos.x});
-    // debug.overlay("apple_pos.y: {d}\n", .{apple_pos.y});
     debug.overlay("speed: {d}\n", .{speed});
+    debug.overlay("length: {d}\n", .{snek.items.len});
 
     if (counter >= input_buffer_duration) {
         // NOTE: this could be a little more elegant
@@ -179,6 +175,12 @@ fn reset() !void {
 fn isCollidingWithObstacle() bool {
     const p = snek.items[0].getFrontCollisionPixel();
 
+    if (p.x < 0 or p.x >= config.canvas_width or
+        p.y < 0 or p.y >= config.canvas_height)
+    {
+        return true;
+    }
+
     for (snek.items[1..]) |seg| {
         if ((p.x >= seg.pos.x and p.x < seg.pos.x + segment_size) and
             (p.y >= seg.pos.y and p.y < seg.pos.y + segment_size))
@@ -240,16 +242,15 @@ fn growSnek() !void {
     if (speed < max_speed) speed += speed_step;
 }
 
+// FIXME: sometimes, the apple is spawned inside a segment
+// I think a segment-sized collision map would help
 fn spawnApple(rand: *std.rand.Random) void {
     var rand_pos = getRandomPos(rand);
     var found_target = false;
 
     while (r.Vector2Equals(rand_pos, apple_pos) != 0) {
-        std.debug.print("got the same positions\n", .{});
         rand_pos = getRandomPos(rand);
     }
-
-    std.debug.print("generated pos x {d}\n", .{rand_pos.x});
 
     while (!found_target) {
         restart: for (snek.items) |seg| {
@@ -258,7 +259,6 @@ fn spawnApple(rand: *std.rand.Random) void {
                 (rand_pos.y >= seg.pos.y and rand_pos.y < seg.pos.y + segment_size))
             {
                 rand_pos = getRandomPos(rand);
-                std.debug.print("got x {d}, seg x {d}, restarting\n", .{ rand_pos.x, seg.pos.x });
                 break :restart;
             }
         }
