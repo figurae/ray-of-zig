@@ -18,8 +18,7 @@ var random: std.rand.Random = undefined;
 const segment_size = 10;
 const initial_segment_count = 8;
 const initial_speed = 40;
-// TODO: have to fix wobblyness before increasing this further
-const max_speed = 120;
+const max_speed = 240;
 const speed_step = 5;
 const input_buffer_duration = 0.2;
 const input_buffer_size = 3;
@@ -99,7 +98,53 @@ pub fn update(dt: f32) !void {
         debug.overlay("{any}\n", .{item});
     }
 
+    gfx.drawSprite(
+        apple_pos,
+        &assets.bitmaps.get("apple").?,
+        .{},
+    );
+
+    {
+        var i = snek.items.len;
+        while (i > 0) {
+            i -= 1;
+            var seg = &snek.items[i];
+            if (!seg.is_stopped) {
+                seg.vel = r.Vector2Scale(V2D.get(seg.dir), speed * dt);
+                seg.pos = r.Vector2Add(seg.pos, seg.vel);
+            }
+        }
+    }
+
+    try adjustSegmentsToGrid();
+
+    for (snek.items) |seg| {
+        const sprite_name = switch (seg.sprite) {
+            .seg => "snek_seg",
+            .hed => "snek_hed",
+            else => "snek_tal",
+        };
+
+        gfx.drawSprite(
+            seg.pos,
+            &assets.bitmaps.get(sprite_name).?,
+            .{ .dir = seg.dir },
+        );
+    }
+
+    if (isCollidingWithObstacle()) try reset();
+    if (isCollidingWithApple()) {
+        should_grow = true;
+        spawnApple(&random);
+    }
+
+    if (r.IsKeyPressed(.KEY_GRAVE)) is_overlay_visible = !is_overlay_visible;
+    debug.displayOverlay(is_overlay_visible);
+}
+
+fn adjustSegmentsToGrid() !void {
     var snek_hed = &snek.items[0];
+
     if (@abs(snek_hed.pos.x - prev_pos.x) >= segment_size or
         @abs(snek_hed.pos.y - prev_pos.y) >= segment_size)
     {
@@ -120,51 +165,10 @@ pub fn update(dt: f32) !void {
         prev_pos = snek_hed.pos;
 
         if (should_grow) {
-            // FIXME: this happens at different times depending on
-            // whether the head turned just before eating the apple
             try growSnek();
             should_grow = false;
         }
     }
-
-    gfx.drawSprite(
-        apple_pos,
-        &assets.bitmaps.get("apple").?,
-        .{},
-    );
-
-    {
-        var i = snek.items.len;
-        while (i > 0) {
-            i -= 1;
-            var seg = &snek.items[i];
-            if (!seg.is_stopped) {
-                seg.vel = r.Vector2Scale(V2D.get(seg.dir), speed * dt);
-                seg.pos = r.Vector2Add(seg.pos, seg.vel);
-            }
-
-            const sprite_name = switch (seg.sprite) {
-                .seg => "snek_seg",
-                .hed => "snek_hed",
-                else => "snek_tal",
-            };
-
-            gfx.drawSprite(
-                seg.pos,
-                &assets.bitmaps.get(sprite_name).?,
-                .{ .dir = seg.dir },
-            );
-        }
-    }
-
-    if (isCollidingWithObstacle()) try reset();
-    if (isCollidingWithApple()) {
-        should_grow = true;
-        spawnApple(&random);
-    }
-
-    if (r.IsKeyPressed(.KEY_GRAVE)) is_overlay_visible = !is_overlay_visible;
-    debug.displayOverlay(is_overlay_visible);
 }
 
 fn reset() !void {
