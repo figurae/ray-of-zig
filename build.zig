@@ -12,7 +12,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    r.addTo(b, exe, target, optimize, .{});
+    r.addTo(b, exe, target.query, optimize, .{});
 
     b.installArtifact(exe);
 
