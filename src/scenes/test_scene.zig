@@ -32,8 +32,8 @@ pub fn init(allocator: std.mem.Allocator) !void {
     try assets.init(allocator, &[_][]const u8{
         "test2.bmp",
         "sprite.bmp",
-        "font4x7.bmp",
     });
+    try debug.init(allocator);
 
     var pcg = std.rand.Pcg.init(@bitCast(std.time.timestamp()));
     random = pcg.random();
@@ -52,6 +52,7 @@ pub fn init(allocator: std.mem.Allocator) !void {
 
 pub fn deinit(allocator: std.mem.Allocator) void {
     snd.deinit();
+    debug.deinit(allocator);
     assets.deinit(allocator);
 }
 

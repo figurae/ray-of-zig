@@ -36,6 +36,14 @@ var log_index: usize = 0;
 var overlay_buffer = [_]u8{32} ** character_count;
 var overlay_index: usize = 0;
 
+pub fn init(allocator: std.mem.Allocator) !void {
+    try assets.add(allocator, &[_][]const u8{"font4x7.bmp"});
+}
+
+pub fn deinit(allocator: std.mem.Allocator) void {
+    assets.remove(allocator, "font4x7");
+}
+
 pub fn log(comptime text: []const u8, args: anytype) void {
     writeToBuffer(text, args, &log_buffer, &log_index);
 }

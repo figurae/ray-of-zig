@@ -43,14 +43,13 @@ var should_grow = false;
 var is_overlay_visible = true;
 
 pub fn init(allocator: std.mem.Allocator) !void {
-    // TODO: allow adding assets outside init to let debug inject the font on its own
     try assets.init(allocator, &[_][]const u8{
-        "font4x7.bmp",
         "snek_seg.bmp",
         "snek_hed.bmp",
         "snek_tal.bmp",
         "apple.bmp",
     });
+    try debug.init(allocator);
 
     var seed: u64 = undefined;
     try std.os.getrandom(std.mem.asBytes(&seed));
@@ -66,9 +65,11 @@ pub fn init(allocator: std.mem.Allocator) !void {
     prev_pos = initial_pos;
 }
 
-pub fn deinit(_: std.mem.Allocator) void {
+pub fn deinit(allocator: std.mem.Allocator) void {
     input_buffer.deinit();
     snek.deinit();
+    debug.deinit(allocator);
+    assets.deinit(allocator);
 }
 
 pub fn update(dt: f32) !void {
