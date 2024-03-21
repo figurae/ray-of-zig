@@ -41,7 +41,7 @@ pub fn init() !void {
     canvas.init();
     r.SetTextureFilter(canvas.texture, @intFromEnum(r.TextureFilter.TEXTURE_FILTER_POINT));
 
-    try scene_manager.init(allocator, .snek);
+    try scene_manager.init(allocator, .test_scene);
 }
 
 pub fn update(dt: f32) !void {

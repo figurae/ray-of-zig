@@ -41,6 +41,10 @@ pub fn getNextLargestScaledResolution(
     };
 }
 
+pub fn lerp(first_input: f64, second_input: f64, param: f64) f64 {
+    return (1 - param) * first_input + param * second_input;
+}
+
 pub const Dir = enum {
     up,
     down,

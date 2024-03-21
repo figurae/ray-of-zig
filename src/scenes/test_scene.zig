@@ -32,6 +32,7 @@ pub fn init(allocator: std.mem.Allocator) !void {
     try assets.init(allocator, &[_][]const u8{
         "test2.bmp",
         "sprite.bmp",
+        "feels_good_transparent.bmp",
     });
     try debug.init(allocator);
 
@@ -83,6 +84,8 @@ pub fn update(dt: f32) !void {
             line.color,
         );
     }
+
+    gfx.drawSprite(.{ .x = 50, .y = 20 }, &assets.bitmaps.get("feels_good_transparent").?, .{});
 
     debug.overlay("sprite_x: {d}\nsprite_y: {d}\n", .{ sprite_x, sprite_y });
     debug.displayOverlay(is_overlay_visible);

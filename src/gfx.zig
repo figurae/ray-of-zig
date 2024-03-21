@@ -11,6 +11,10 @@ pub fn drawPixel(pos: r.Vector2, color: r.Color) void {
     viewport.putPixelInView(pos, color);
 }
 
+pub fn getPixel(pos: r.Vector2) r.Color {
+    return viewport.getPixelFromView(pos);
+}
+
 const DrawSpriteOptions = struct {
     dir: m.Dir = .right,
 };
@@ -33,16 +37,19 @@ pub fn drawSprite(
         if (options.dir == .down or options.dir == .up)
             std.mem.swap(i32, &x, &y);
 
-        // TODO: handle alpha blending
-        if (pixel.a == 255) {
-            drawPixel(
-                .{
-                    .x = t.f32FromInt(x) + pos.x,
-                    .y = t.f32FromInt(y) + pos.y,
-                },
-                pixel,
-            );
-        }
+        const pixel_pos = .{
+            .x = t.f32FromInt(x) + pos.x,
+            .y = t.f32FromInt(y) + pos.y,
+        };
+
+        if (pixel.a == 0) continue;
+
+        const blended_pixel = if (pixel.a == 255) pixel else blendColors(pixel, getPixel(pixel_pos));
+
+        drawPixel(
+            pixel_pos,
+            blended_pixel,
+        );
     }
 }
 
@@ -104,9 +111,14 @@ pub const canvas = struct {
         }
     }
 
-    pub fn putPixelOnCanvas(x: i32, y: i32, color: r.Color) void {
-        const index = @as(usize, @intCast(width * y + x));
+    fn putPixel(x: i32, y: i32, color: r.Color) void {
+        const index = getIndexFromPos(x, y, width);
         pixels[index] = color;
+    }
+
+    fn getPixel(x: i32, y: i32) r.Color {
+        const index = getIndexFromPos(x, y, width);
+        return pixels[index];
     }
 };
 
@@ -131,7 +143,26 @@ pub const viewport = struct {
             canvas.width,
             canvas.height,
         )) {
-            canvas.putPixelOnCanvas(x_on_canvas, y_on_canvas, color);
+            canvas.putPixel(x_on_canvas, y_on_canvas, color);
+        }
+    }
+
+    fn getPixelFromView(
+        pixel_pos: r.Vector2,
+    ) r.Color {
+        const pos_on_canvas = r.Vector2Subtract(pixel_pos, pos);
+        const x_on_canvas = t.i32FromFloat(@round(pos_on_canvas.x));
+        const y_on_canvas = t.i32FromFloat(@round(pos_on_canvas.y));
+
+        if (!isPixelOutOfBounds(
+            x_on_canvas,
+            y_on_canvas,
+            canvas.width,
+            canvas.height,
+        )) {
+            return canvas.getPixel(x_on_canvas, y_on_canvas);
+        } else {
+            return r.WHITE;
         }
     }
 };
@@ -164,7 +195,7 @@ fn drawGlyph(
         for (font_sheet.pixels[pixel_range_start..pixel_range_end], 0..) |pixel, x| {
             // TODO: handle alpha blending
             if (pixel.a == 255) {
-                canvas.putPixelOnCanvas(
+                canvas.putPixel(
                     @intCast(x + t.usizeFromFloat(pos.x)),
                     @intCast(y + t.usizeFromFloat(pos.y)),
                     color,
@@ -176,4 +207,22 @@ fn drawGlyph(
 
 fn isPixelOutOfBounds(x: i32, y: i32, width: i32, height: i32) bool {
     return x < 0 or y < 0 or x >= width or y >= height;
+}
+
+fn getIndexFromPos(x: i32, y: i32, width: i32) usize {
+    return @intCast(width * y + x);
+}
+
+fn blendColors(fg_color: r.Color, bg_color: r.Color) r.Color {
+    const alpha = t.f64FromInt(fg_color.a) / 255.0;
+    const new_r = blendChannel(fg_color.r, bg_color.r, alpha);
+    const new_g = blendChannel(fg_color.g, bg_color.g, alpha);
+    const new_b = blendChannel(fg_color.b, bg_color.b, alpha);
+
+    return .{ .r = new_r, .g = new_g, .b = new_b, .a = 255 };
+}
+
+fn blendChannel(fg_channel: u8, bg_channel: u8, alpha: f64) u8 {
+    const new_channel = m.lerp(t.f64FromInt(bg_channel), t.f64FromInt(fg_channel), alpha);
+    return t.u8FromFloat(new_channel);
 }
